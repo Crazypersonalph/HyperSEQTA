@@ -27,6 +27,17 @@ var stringToHTML = function (str) {
   return doc.body;
 };
 
+//modified/new function:
+var stringToHTML3 = function (str, styles) {
+    var parser = new DOMParser();
+    var doc3 = parser.parseFromString(str, "text/html");
+    var body = doc3.body;
+
+    body.style.cssText = styles;
+
+    return doc3;
+}
+
 const ShortcutLinks = {
   YouTube: {
     link: "https://www.youtube.com/",
@@ -3020,6 +3031,7 @@ function SendHomePage() {
                 // Create a div, and place information from json response
                 var NewNotice = document.createElement("div");
                 NewNotice.classList.add("notice");
+				
                 var title = stringToHTML(
                   `<h3 style="color:var(--colour)">` + NoticesPayload.payload[i].title + `</h3>`
                 );
@@ -3036,8 +3048,15 @@ function SendHomePage() {
                   `<h6 style="color:var(--colour)">` + NoticesPayload.payload[i].staff + `</h6>`
                 );
                 NewNotice.append(staff.firstChild);
-                // Converts the string into HTML
-                var content = stringToHTML(NoticesPayload.payload[i].contents);
+                
+				
+				// -----------UPDATED CODE---------------
+				// Converts the string into HTML
+        var styles_fix = "height: auto; overflow: scroll; margin: 0px; background: var(--background-primary);";
+				var content = stringToHTML3(NoticesPayload.payload[i].contents, styles_fix);
+				// stringToHTML3 is a modified version of the original function, stringToHTML. Both functions are declared at the beginning of this file. Edits by norangeflame.
+				
+				
                 for (let i = 0; i < content.childNodes.length; i++) {
                   NewNotice.append(content.childNodes[i]);
                 }
