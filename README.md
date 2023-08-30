@@ -46,3 +46,5 @@ Dr.-Ing. Mario Heiderich, Cure53, creators of the DOMPurify project
 <div align="center">
 <a href="https://discord.gg/jPFpsrtPyX">Join the Discord!</a>
 </div>
+
+(quick test for eslint)
