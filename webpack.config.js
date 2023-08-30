@@ -1,5 +1,4 @@
-// const HtmlWebpackPlugin = require('html-webpack-plugin');
-// const webpack = require('webpack'); //to access built-in plugins
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const path = require('path')
 
@@ -13,10 +12,10 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
-        { from: './src/manifest.json', to: './' },
-        { from: './src/icons/', to: './icons/' },
-        { from: './src/inject', to: './inject' },
-        { from: './src/popup', to: './popup' }
+        { from: './public/manifest.json', to: './' },
+        { from: './public/icons/', to: './icons/' },
+        { from: './public/popup/', to: './popup' },
+        { from: './public/preview/', to: './inject/preview/' }
       ]
     }),
     new CopyWebpackPlugin({
@@ -30,11 +29,26 @@ module.exports = {
     background: './src/background.js'
   },
   output: {
-    filename: '[name].js',
+    filename: (pathData) => {
+      const name = pathData.chunk.name.replace('inject-', '');
+      return name.includes('inject') ? `inject/${name}.js` : `${name}.js`
+    },
     path: path.join(__dirname, '/dist')
   },
   module: {
     rules: [
+      {
+        test: /\.css$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: "css-loader",
+            options: {
+              importLoaders: 1
+            }
+          }
+        ]
+      },
       {
         test: /\.(?:js|mjs|cjs)$/,
         exclude: /node_modules/,
