@@ -22,33 +22,28 @@ module.exports = {
       patterns: [{
         from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js'
       }]
+    }),
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
     })
   ],
   entry: {
     seqta: './src/SEQTA.js',
-    background: './src/background.js'
+    background: './src/background.js',
+    'inject/documentload': './src/inject/documentload.css',
+    'inject/iframe': './src/inject/iframe.css',
+    'inject/injected': './src/inject/injected.css',
+    'inject/noticeiframe': './src/inject/noticeiframe.css'
   },
   output: {
     filename: (pathData) => {
-      const name = pathData.chunk.name.replace('inject-', '');
+      const name = pathData.chunk.name.replace('inject-', '')
       return name.includes('inject') ? `inject/${name}.js` : `${name}.js`
     },
     path: path.join(__dirname, '/dist')
   },
   module: {
     rules: [
-      {
-        test: /\.css$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          {
-            loader: "css-loader",
-            options: {
-              importLoaders: 1
-            }
-          }
-        ]
-      },
       {
         test: /\.(?:js|mjs|cjs)$/,
         exclude: /node_modules/,
@@ -60,6 +55,18 @@ module.exports = {
             ]
           }
         }
+      },
+      {
+        test: /\.css$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 1
+            }
+          }
+        ]
       }
     ]
   }

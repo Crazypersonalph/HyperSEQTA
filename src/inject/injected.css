@@ -1143,7 +1143,7 @@ body {
   content: "";
   width: 14px;
   height: 12px;
-  background-image: url(/icons/betterseqta-light-outline.png);
+  background-image: url(../../public/icons/betterseqta-light-outline.png);
   display: inline-block;
   background-size: 18px 18px;
   color: #fff;
