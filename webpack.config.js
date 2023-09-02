@@ -1,6 +1,5 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
 
 module.exports = {
@@ -11,15 +10,12 @@ module.exports = {
     maxEntrypointSize: 512000
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      chunks: ['popup'],
-      template: './src/popup/info.html'
-    }),
     new CopyWebpackPlugin({
       patterns: [
         { from: './public/manifest.json', to: './' },
         { from: './public/icons/', to: './icons/' },
-        { from: './public/preview/', to: './inject/preview/' }
+        { from: './public/preview/', to: './inject/preview/' },
+        { from: './public/popup/', to: './popup/' }
       ]
     }),
     new CopyWebpackPlugin({
@@ -37,8 +33,7 @@ module.exports = {
     'inject/documentload': './src/inject/documentload.css',
     'inject/iframe': './src/inject/iframe.css',
     'inject/injected': './src/inject/injected.css',
-    'inject/noticeiframe': './src/inject/noticeiframe.css',
-    popup: './src/popup/info.html'
+    'inject/noticeiframe': './src/inject/noticeiframe.css'
   },
   output: {
     filename: (pathData) => {
