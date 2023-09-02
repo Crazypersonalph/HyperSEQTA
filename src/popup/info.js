@@ -1,4 +1,3 @@
-import DOMPurify from 'dompurify'
 const onoffselection = document.querySelector('#onoff')
 const notificationcollector = document.querySelector('#notification')
 const lessonalert = document.querySelector('#lessonalert')
