@@ -2,4 +2,4 @@
 const { content } = Astro.props;
 ---
 
-<button class="p-8 rounded hover:rounded-lg text-4xl outline outline-offset-2 outline-4 outline-blue-500 duration-300 hover:bg-blue-400 inline-flex"><slot/></button>
+<a href={content} class="flex px-[1%] py-[4%] place-content-around"><button class="p-8 rounded hover:rounded-lg text-4xl outline outline-offset-2 outline-4 outline-blue-500 duration-300 hover:bg-blue-400 inline-flex"><slot/></button></a>
