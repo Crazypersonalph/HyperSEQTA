@@ -840,6 +840,7 @@ function RunExtensionSettingsJS () {
   const miscsection = document.querySelector('#miscsection')
   const colorpicker = document.querySelector('#colorpicker')
   const animatedbk = document.querySelector('#animatedbk')
+  const bkslider = document.querySelector('#bksliderinput')
   const customshortcutbutton = document.getElementsByClassName('custom-shortcuts-button')[0]
   const customshortcutdiv = document.getElementsByClassName('custom-shortcuts-container')[0]
   const customshortcutsubmit = document.getElementsByClassName('custom-shortcuts-submit')[0]
@@ -898,6 +899,7 @@ function RunExtensionSettingsJS () {
       { notificationcollector: notificationcollector.checked })
     browser.storage.local.set({ lessonalert: lessonalert.checked })
     browser.storage.local.set({ animatedbk: animatedbk.checked })
+    browser.storage.local.set({ bksliderinput: bkslider.value })
   }
 
   function StoreAllSettings () {
@@ -933,6 +935,7 @@ function RunExtensionSettingsJS () {
       notificationcollector.checked = restoredSettings.notificationcollector
       lessonalert.checked = restoredSettings.lessonalert
       animatedbk.checked = restoredSettings.animatedbk
+      bkslider.value = restoredSettings.bksliderinput
       const result = browser.storage.local.get(['shortcuts'])
       function storageShortcut (item) {
         const shortcuts = Object.values(item)[0]
@@ -1104,6 +1107,8 @@ function RunExtensionSettingsJS () {
   lessonalert.addEventListener('change', storeNotificationSettings)
 
   animatedbk.addEventListener('change', storeNotificationSettings)
+
+  bkslider.addEventListener('change', storeNotificationSettings)
 
   for (let i = 0; i < allinputs.length; i++) {
     if (allinputs[i].id !== 'colorpicker' && allinputs[i].id !== 'shortcuturl' && allinputs[i].id !== 'shortcutname') {
@@ -1337,6 +1342,17 @@ function CallExtensionSettings () {
           </div>
           <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="animatedbk">
           <label for="animatedbk" class="onoffswitch-label"></label>
+          </div>
+        </div>
+
+        <div class="item-container">
+          <div class="text-container">
+            <h1 class="addonitem">Animated Background Speed</h1>
+            <p class="item subitem">Controls the speed of the animated background.</p>
+          </div>
+          <div class="bkslider">
+            <input type="range" id="bksliderinput" name="Animated Background Slider" min="0" max="200" />
+            <label for="bksliderinput" class="bkslider-label"/>
           </div>
         </div>
 
@@ -1699,6 +1715,7 @@ function AddBetterSEQTAElements (toggle) {
         // Creates Home menu button and appends it as the first child of the list
 
         const result = browser.storage.local.get(['animatedbk'])
+        const sliderVal = browser.storage.local.get(['bksliderinput'])
         function animbkEnable (item) {
           if (item.animatedbk) {
             CreateBackground()
@@ -1706,7 +1723,20 @@ function AddBetterSEQTAElements (toggle) {
             document.getElementById('container').style.background = 'var(--background-secondary)'
           }
         }
+
+        function bkValues (item) {
+          const bg = document.getElementsByClassName('bg')
+          for (const bgSingular of bg) {
+            const style = window.getComputedStyle(bgSingular)
+            const ogTiming = style.getPropertyValue('animation-duration')
+            const sliced = ogTiming.slice(0, -1)
+            bgSingular.style.animationDuration = `${(Number(sliced) / (item.bksliderinput / 100)).toString()}s`
+            const thing = window.getComputedStyle(bgSingular)
+            console.log(thing.getPropertyValue('animation-duration'))
+          }
+        }
         result.then(animbkEnable, onError)
+        sliderVal.then(bkValues, onError)
 
         const titlebar = document.createElement('div')
         titlebar.classList.add('titlebar')
