@@ -7,6 +7,7 @@ const miscsection = document.querySelector('#miscsection')
 const mainpage = document.querySelector('#mainpage')
 const colorpicker = document.querySelector('#colorpicker')
 const animatedbk = document.querySelector('#animatedbk')
+const bkslider = document.querySelector('#bksliderinput')
 const customshortcutbutton = document.getElementsByClassName('custom-shortcuts-button')[0]
 const customshortcutdiv = document.getElementsByClassName('custom-shortcuts-container')[0]
 const customshortcutsubmit = document.getElementsByClassName('custom-shortcuts-submit')[0]
@@ -88,8 +89,8 @@ function storeNotificationSettings() {
     { notificationcollector: notificationcollector.checked })
   chrome.storage.local.set({ lessonalert: lessonalert.checked })
   chrome.storage.local.set({ animatedbk: animatedbk.checked })
+  chrome.storage.local.set({ bksliderinput: bkslider.value })
 }
-
 
 function StoreAllSettings() {
   chrome.storage.local.get(['shortcuts'], function (result) {
@@ -118,6 +119,7 @@ function updateUI(restoredSettings) {
     notificationcollector.checked = restoredSettings.notificationcollector
     lessonalert.checked = restoredSettings.lessonalert
     animatedbk.checked = restoredSettings.animatedbk
+    bkslider.value = restoredSettings.bksliderinput
     chrome.storage.local.get(['shortcuts'], function (result) {
       const shortcuts = Object.values(result)[0]
       for (let i = 0; i < shortcutbuttons.length; i++) {
@@ -301,6 +303,8 @@ notificationcollector.addEventListener(
 lessonalert.addEventListener('change', storeNotificationSettings)
 
 animatedbk.addEventListener('change', storeNotificationSettings)
+
+bkslider.addEventListener('change', storeNotificationSettings)
 
 for (let i = 0; i < allinputs.length; i++) {
   if (allinputs[i].id !== 'colorpicker' && allinputs[i].id !== 'shortcuturl' && allinputs[i].id !== 'shortcutname') {
