@@ -1351,7 +1351,7 @@ function CallExtensionSettings () {
             <p class="item subitem">Controls the speed of the animated background.</p>
           </div>
           <div class="bkslider">
-            <input type="range" id="bksliderinput" name="Animated Background Slider" min="0" max="200" />
+            <input type="range" id="bksliderinput" name="Animated Background Slider" min="1" max="200" />
             <label for="bksliderinput" class="bkslider-label"/>
           </div>
         </div>
