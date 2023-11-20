@@ -21,8 +21,6 @@ Nulkem, creator of the original project
 Crazypersonalph, currently the lead developer of this fork
 <br>
 Norangeflame, helped fix notices issue
-<br>
-SethBurkart123, who inspired the new webpack configuration
 </p>
 <br>
 <div align="center">
