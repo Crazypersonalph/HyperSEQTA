@@ -11,15 +11,15 @@ The continuation of the BetterSEQTA project.
 <i>This project is not related to in any way/shape/form to Education Horizons and/or any related parties.</i>
 </p>
 
-<p align="center">
-<b>Contributors (very cool people)</b>
+<div align="center">
+<h2>Contributors (very cool people)</h2>
 <br>
 Nulkem, the original project's creator.
 <br>
 Crazypersonalph, current lead developer of this fork.
 <br>
 Norangeflame, helped fix the notices issue.
-</p>
+</div>
 <br>
 <div align="center">
 <h2>
@@ -31,20 +31,19 @@ Build instructions:
 <code>pnpm build</code>
 </div>
 <br>
-<p align="center">
-<b>Acknowledgements</b>
+<div align="center">
+<h2>Acknowledgements:</h2>
 <br>
 Nulkem, creator of the original BetterSEQTA project, therefore some of his code is reused.
 <br>
 Momo Bassit, creator of the Coloris project, utilised by BetterSEQTA.
 <br>
 Dr.-Ing. Mario Heiderich, Cure53, creators of the DOMPurify project.
-</p>
-<br>
-<div align="center">
-<a href="https://chrome.google.com/webstore/detail/betterseqta/hnbneadgjmefpddchlhefgbkkfbhdebl/related">Chrome Web Store</a>
 </div>
 <br>
 <div align="center">
+<h2>Links:</h2>
+<a href="https://chrome.google.com/webstore/detail/betterseqta/hnbneadgjmefpddchlhefgbkkfbhdebl/related">Chrome Web Store</a>
+<br>
 <a href="https://discord.gg/jPFpsrtPyX">Join the Discord!</a>
 </div>
