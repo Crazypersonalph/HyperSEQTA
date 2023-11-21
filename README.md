@@ -20,7 +20,17 @@ Crazypersonalph, current lead developer of this fork.
 <br>
 Norangeflame, helped fix the notices issue.
 </p>
-
+<br>
+<div align="center">
+<h2>
+Build instructions:
+</h2>
+<br>
+<code>pnpm install</code>
+<br>
+<code>pnpm build</code>
+</div>
+<br>
 <p align="center">
 <b>Acknowledgements</b>
 <br>
