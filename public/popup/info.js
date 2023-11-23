@@ -39,7 +39,7 @@ const domainbutton = document.getElementById('domain-button')
 let validURL = false
 let validName = false
 
-function openGithub() {
+function openGithub () {
   chrome.tabs.create({ url: 'https://github.com/Crazypersonalph/betterseqta' })
 }
 
@@ -48,7 +48,7 @@ function openPage (page) {
   page.style.right = '0px'
 }
 
-function backToMainMenu() {
+function backToMainMenu () {
   mainpage.style.left = '0px'
 
   menupage.style.right = '-350px'
@@ -56,17 +56,16 @@ function backToMainMenu() {
   miscpage.style.right = '-350px'
 }
 
-function resetActive() {
+function resetActive () {
   for (let i = 0; i < navbuttons.length; i++) {
     navbuttons[i].classList.remove('activenav')
   }
   for (let i = 0; i < menupages.length; i++) {
     menupages[i].classList.add('hiddenmenu')
   }
-
 }
 
-function FindSEQTATab() {
+function FindSEQTATab () {
   chrome.tabs.query({}, function (tabs) {
     for (const tab of tabs) {
       if (tab.title.includes('SEQTA Learn')) {
@@ -78,13 +77,13 @@ function FindSEQTATab() {
 /*
 Store the currently selected settings using chrome.storage.local.
 */
-function storeSettings() {
+function storeSettings () {
   chrome.storage.local.set({ onoff: onoffselection.checked }, function () {
     FindSEQTATab()
   })
 }
 
-function storeNotificationSettings() {
+function storeNotificationSettings () {
   chrome.storage.local.set(
     { notificationcollector: notificationcollector.checked })
   chrome.storage.local.set({ lessonalert: lessonalert.checked })
@@ -92,7 +91,7 @@ function storeNotificationSettings() {
   chrome.storage.local.set({ bksliderinput: bkslider.value })
 }
 
-function StoreAllSettings() {
+function StoreAllSettings () {
   chrome.storage.local.get(['shortcuts'], function (result) {
     const shortcuts = Object.values(result)[0]
     for (let i = 0; i < shortcutbuttons.length; i++) {
@@ -107,8 +106,8 @@ function StoreAllSettings() {
 Update the options UI with the settings values retrieved from storage,
 or the default settings if the stored settings are empty.
 */
-function updateUI(restoredSettings) {
-  if (typeof restoredSettings.onoff == 'undefined') {
+function updateUI (restoredSettings) {
+  if (typeof restoredSettings.onoff === 'undefined') {
     chrome.runtime.sendMessage({ type: 'setDefaultStorage' })
 
     chrome.storage.local.get(null, function (result) {
@@ -132,13 +131,11 @@ function updateUI(restoredSettings) {
 
 const stringtoHTML = function (str) {
   const parser = new DOMParser()
-  str = DOMPurify.sanitize(str)
   const doc = parser.parseFromString(str, 'text/html')
   return doc.body
 }
 
-function CreateShortcutDiv(name) {
-
+function CreateShortcutDiv (name) {
   const div = stringtoHTML(`
   <div class="item-container menushortcuts" data-customshortcut="${name}">
     <div class="text-container">
@@ -158,34 +155,33 @@ function CreateShortcutDiv(name) {
   })
 }
 
-function AddCustomShortcuts() {
+function AddCustomShortcuts () {
   chrome.storage.local.get(['customshortcuts'], function (result) {
     const customshortcuts = Object.values(result)[0]
     for (let i = 0; i < customshortcuts.length; i++) {
       const element = customshortcuts[i]
       CreateShortcutDiv(
-        element.name,
+        element.name
       )
     }
   })
 }
 
-function DeleteCustomShortcut(name) {
-  item = document.querySelector(`[data-customshortcut="${name}"]`)
+function DeleteCustomShortcut (name) {
+  const item = document.querySelector(`[data-customshortcut="${name}"]`)
   item.remove()
   chrome.storage.local.get(['customshortcuts'], function (result) {
     const customshortcuts = Object.values(result)[0]
     for (let i = 0; i < customshortcuts.length; i++) {
-      if (customshortcuts[i].name == name) {
+      if (customshortcuts[i].name === name) {
         customshortcuts.splice(i, 1)
       }
     }
     chrome.storage.local.set({ customshortcuts })
   })
-
 }
 
-function CustomShortcutMenu() {
+function CustomShortcutMenu () {
   customshortcutinputname.value = ''
   customshortcutinputurl.value = ''
   validURL = false
@@ -198,7 +194,7 @@ function CustomShortcutMenu() {
   };
 }
 
-function CreateCustomShortcut() {
+function CreateCustomShortcut () {
   const shortcutname = customshortcutinputname.value
   let shortcuturl = customshortcutinputurl.value
 
@@ -215,10 +211,9 @@ function CreateCustomShortcut() {
   CreateShortcutDiv(
     shortcutname
   )
-
 }
 
-function onError(e) {
+function onError (e) {
   console.error(e)
 }
 /*
@@ -257,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.storage.local.get(['customshortcuts'], function (result) {
       const customshortcuts = Object.values(result)[0]
       for (let i = 0; i < customshortcuts.length; i++) {
-        if (customshortcuts[i].name == customshortcutinputname.value) {
+        if (customshortcuts[i].name === customshortcutinputname.value) {
           sameName = true
         }
       }
@@ -270,8 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (validName && validURL) {
         customshortcutsubmit.classList.add('customshortcut-submit-valid')
-      }
-      else {
+      } else {
         customshortcutsubmit.classList.remove('customshortcut-submit-valid')
       }
     })
@@ -286,8 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (validName && validURL) {
       customshortcutsubmit.classList.add('customshortcut-submit-valid')
-    }
-    else {
+    } else {
       customshortcutsubmit.classList.remove('customshortcut-submit-valid')
     }
   })
