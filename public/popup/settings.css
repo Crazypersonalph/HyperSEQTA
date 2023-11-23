@@ -1,0 +1,10 @@
+.seqta-settings {
+  width: 350px;
+  margin: 0;
+  background-color: #131313;
+  overflow: hidden;
+  position: absolute;
+  right: 10px;
+  top: 80px;
+  z-index: 20;
+}

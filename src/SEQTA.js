@@ -2,6 +2,7 @@ import { stringToHTML } from './functions/stringToHTML'
 import { ShortcutLinks } from './functions/ShortcutLinks'
 import { MenuitemSVGKey } from './functions/MenuitemSVGKey'
 import { onError } from './functions/onError'
+import { CreateBackground } from './functions/CreateBackground'
 const browser = require('webextension-polyfill')
 const isChrome = window.chrome
 
@@ -227,26 +228,6 @@ async function DeleteWhatsNew () {
   await delay(500)
   bkelement.remove()
   popup.remove()
-}
-
-function CreateBackground () {
-  // Creating and inserting 3 divs containing the background applied to the pages
-  const bklocation = document.getElementById('container')
-  const menu = document.getElementById('menu')
-  const bk = document.createElement('div')
-  bk.classList.add('bg')
-
-  bklocation.insertBefore(bk, menu)
-
-  const bk2 = document.createElement('div')
-  bk2.classList.add('bg')
-  bk2.classList.add('bg2')
-  bklocation.insertBefore(bk2, menu)
-
-  const bk3 = document.createElement('div')
-  bk3.classList.add('bg')
-  bk3.classList.add('bg3')
-  bklocation.insertBefore(bk3, menu)
 }
 
 function waitForElm (selector) {
@@ -825,11 +806,13 @@ document.addEventListener(
 
 function RunExtensionSettingsJS () {
   const whatsnewsettings = document.getElementById('whatsnewsettings')
-  whatsnewsettings.addEventListener('click', function () {
-    if (!WhatsNewOpen) {
-      WhatsNewOpen = true
-      OpenWhatsNewPopup()
-    }
+  window.addEventListener('DOMContentLoaded', (event) => {
+    whatsnewsettings.addEventListener('click', function () {
+      if (!WhatsNewOpen) {
+        WhatsNewOpen = true
+        OpenWhatsNewPopup()
+      }
+    })
   })
 
   const onoffselection = document.querySelector('#onoff')
@@ -1045,32 +1028,53 @@ function RunExtensionSettingsJS () {
   function onError (error) { console.log(`Error: ${error}`) }
   result.then(colorUpdate, onError)
 
-  github.addEventListener('click', openGithub)
-  aboutsection.addEventListener('click', () => { resetActive(); aboutsection.classList.add('activenav'); menupage.classList.remove('hiddenmenu') })
+  window.addEventListener('DOMContentLoaded', (event) => {
+    github.addEventListener('click', openGithub)
+    aboutsection.addEventListener('click', () => { resetActive(); aboutsection.classList.add('activenav'); menupage.classList.remove('hiddenmenu') })
 
-  shortcutsection.addEventListener('click', () => { resetActive(); shortcutsection.classList.add('activenav'); shortcutpage.classList.remove('hiddenmenu') })
+    shortcutsection.addEventListener('click', () => { resetActive(); shortcutsection.classList.add('activenav'); shortcutpage.classList.remove('hiddenmenu') })
 
-  miscsection.addEventListener('click', () => { resetActive(); miscsection.classList.add('activenav'); miscpage.classList.remove('hiddenmenu') })
+    miscsection.addEventListener('click', () => { resetActive(); miscsection.classList.add('activenav'); miscpage.classList.remove('hiddenmenu') })
 
-  customshortcutbutton.addEventListener('click', () => { CustomShortcutMenu() })
-  customshortcutsubmit.addEventListener('click', () => { if (validName && validURL) { CreateCustomShortcut(); CustomShortcutMenu() } })
-
+    customshortcutbutton.addEventListener('click', () => { CustomShortcutMenu() })
+    customshortcutsubmit.addEventListener('click', () => { if (validName && validURL) { CreateCustomShortcut(); CustomShortcutMenu() } })
+  })
   let sameName = false
-  customshortcutinputname.addEventListener('input', function () {
-    sameName = false
-    const result = browser.storage.local.get(['customshortcuts'])
-    function shortcutSubmit (item) {
-      const customshortcuts = Object.values(item)[0]
-      for (let i = 0; i < customshortcuts.length; i++) {
-        if (customshortcuts[i].name === customshortcutinputname.value) {
-          sameName = true
+  window.addEventListener('DOMContentLoaded', (event) => {
+    customshortcutinputname.addEventListener('input', function () {
+      sameName = false
+      const result = browser.storage.local.get(['customshortcuts'])
+      function shortcutSubmit (item) {
+        const customshortcuts = Object.values(item)[0]
+        for (let i = 0; i < customshortcuts.length; i++) {
+          if (customshortcuts[i].name === customshortcutinputname.value) {
+            sameName = true
+          }
+        }
+
+        if (customshortcutinputname.value.length > 0 && customshortcutinputname.value.length < 22 && !sameName) {
+          validName = true
+        } else {
+          validName = false
+        }
+
+        if (validName && validURL) {
+          customshortcutsubmit.classList.add('customshortcut-submit-valid')
+        } else {
+          customshortcutsubmit.classList.remove('customshortcut-submit-valid')
         }
       }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(shortcutSubmit, onError)
+    })
+  })
 
-      if (customshortcutinputname.value.length > 0 && customshortcutinputname.value.length < 22 && !sameName) {
-        validName = true
+  window.addEventListener('DOMContentLoaded', (event) => {
+    customshortcutinputurl.addEventListener('input', function () {
+      if (customshortcutinputurl.value.length > 0 && customshortcutinputurl.value.includes('.')) {
+        validURL = true
       } else {
-        validName = false
+        validURL = false
       }
 
       if (validName && validURL) {
@@ -1078,331 +1082,74 @@ function RunExtensionSettingsJS () {
       } else {
         customshortcutsubmit.classList.remove('customshortcut-submit-valid')
       }
-    }
-    function onError (error) { console.log(`Error: ${error}`) }
-    result.then(shortcutSubmit, onError)
-  })
-
-  customshortcutinputurl.addEventListener('input', function () {
-    if (customshortcutinputurl.value.length > 0 && customshortcutinputurl.value.includes('.')) {
-      validURL = true
-    } else {
-      validURL = false
-    }
-
-    if (validName && validURL) {
-      customshortcutsubmit.classList.add('customshortcut-submit-valid')
-    } else {
-      customshortcutsubmit.classList.remove('customshortcut-submit-valid')
-    }
+    })
   })
 
   AddCustomShortcuts()
 
-  onoffselection.addEventListener('change', storeSettings)
-  notificationcollector.addEventListener(
-    'change',
-    storeNotificationSettings
-  )
-  lessonalert.addEventListener('change', storeNotificationSettings)
+  window.addEventListener('DOMContentLoaded', (event) => {
+    onoffselection.addEventListener('change', storeSettings)
+    notificationcollector.addEventListener(
+      'change',
+      storeNotificationSettings
+    )
+    lessonalert.addEventListener('change', storeNotificationSettings)
 
-  animatedbk.addEventListener('change', storeNotificationSettings)
+    animatedbk.addEventListener('change', storeNotificationSettings)
 
-  bkslider.addEventListener('change', storeNotificationSettings)
-
+    bkslider.addEventListener('change', storeNotificationSettings)
+  })
   for (let i = 0; i < allinputs.length; i++) {
     if (allinputs[i].id !== 'colorpicker' && allinputs[i].id !== 'shortcuturl' && allinputs[i].id !== 'shortcutname') {
       allinputs[i].addEventListener('change', () => { applybutton.style.left = '4px' })
     }
   }
 
-  applybutton.addEventListener('click', () => { StoreAllSettings(); applybutton.style.left = '-150px' })
+  window.addEventListener('DOMContentLoaded', (event) => {
+    applybutton.addEventListener('click', () => { StoreAllSettings(); applybutton.style.left = '-150px' })
 
-  colorpicker.addEventListener('input', function () {
-    const colorPreview = document.querySelector('#clr-color-preview')
-    if (colorPreview.style.color) {
-      let hex = colorPreview.style.color.split('(')[1].split(')')[0]
-      hex = hex.split(',')
-      let b = hex.map(function (x) { // For each array element
-        x = parseInt(x).toString(16) // Convert to a base16 string
-        return (x.length === 1) ? '0' + x : x // Add zero if we get only one character
-      })
-      b = '#' + b.join('')
+    colorpicker.addEventListener('input', function () {
+      const colorPreview = document.querySelector('#clr-color-preview')
+      if (colorPreview.style.color) {
+        let hex = colorPreview.style.color.split('(')[1].split(')')[0]
+        hex = hex.split(',')
+        let b = hex.map(function (x) { // For each array element
+          x = parseInt(x).toString(16) // Convert to a base16 string
+          return (x.length === 1) ? '0' + x : x // Add zero if we get only one character
+        })
+        b = '#' + b.join('')
 
-      browser.storage.local.set({ selectedColor: b })
-    }
+        browser.storage.local.set({ selectedColor: b })
+      }
+    })
   })
 }
 
 function CallExtensionSettings () {
-  // Injecting CSS File to the webpage to overwrite iFrame default CSS
-  let cssFile = browser.runtime.getURL('popup/info.css')
   let fileref = document.createElement('link')
+  const cssFile = browser.runtime.getURL('popup/settings.css')
   fileref.setAttribute('rel', 'stylesheet')
   fileref.setAttribute('type', 'text/css')
   fileref.setAttribute('href', cssFile)
   document.head.append(fileref)
 
-  const jsFile = browser.runtime.getURL('popup/coloris.js')
-  fileref = document.createElement('script')
-  fileref.setAttribute('src', jsFile)
-  document.head.append(fileref)
+  fileref = document.createElement('div')
+  fileref.setAttribute('class', 'seqta-settings hidden')
+  fileref.setAttribute('id', 'ExtensionPopup')
 
-  cssFile = browser.runtime.getURL('popup/coloris.css')
-  fileref = document.createElement('link')
-  fileref.setAttribute('rel', 'stylesheet')
-  fileref.setAttribute('type', 'text/css')
-  fileref.setAttribute('href', cssFile)
-  document.head.append(fileref)
-  const Settings = stringToHTML(`<div class="outside-container hidden" id="ExtensionPopup"><div class="logo-container"><img src=${browser.runtime.getURL('icons/betterseqta-light-full.png')}></div>
-  <div class="main-page" id="mainpage">
-      <div class="topmenu">
-        <div class="navitem activenav" id="miscsection">Settings</div>
-        <div class="navitem" id="shortcutsection">Shortcuts</div>
-        <div class="navitem" id="aboutsection">About</div>
-      </div>
-    </div>
-  
+  const popup = document.createElement('iframe')
+  const popupFile = browser.runtime.getURL('popup/info.html')
+  popup.setAttribute('src', popupFile)
+  popup.setAttribute('width', '350px')
+  popup.setAttribute('height', '535px')
+  popup.setAttribute('style', 'border: none;')
 
-  <div class="menu-page hiddenmenu" id="menupage">
-    <div class="selector-container" style="margin-bottom: 0;">
-      <div class="menu-item-selection">
-          <div class="aboutcontainer">
-          <div>
-            <h1 class="addonitem">About</h1>
-            <p class="item subitem">Maintained by Crazypersonalph</p>
-            <p class="item subitem">Continuation of the BetterSeqta project</p>
-          </div>
-        </div>
-
-        <div class="aboutcontainer">
-          <div>
-
-            <a class="aboutlinks" href="https://betterseqta.crazypersonalph.com" target="_blank">
-              <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83C7.22,12.88 7.22,9.71 9.17,7.76V7.76L12.71,4.22C14.66,2.27 17.83,2.27 19.78,4.22C21.73,6.17 21.73,9.34 19.78,11.29L18.29,12.78C18.3,11.96 18.17,11.14 17.89,10.36L18.36,9.88C19.54,8.71 19.54,6.81 18.36,5.64C17.19,4.46 15.29,4.46 14.12,5.64L10.59,9.17C9.41,10.34 9.41,12.24 10.59,13.41M13.41,9.17C13.8,8.78 14.44,8.78 14.83,9.17C16.78,11.12 16.78,14.29 14.83,16.24V16.24L11.29,19.78C9.34,21.73 6.17,21.73 4.22,19.78C2.27,17.83 2.27,14.66 4.22,12.71L5.71,11.22C5.7,12.04 5.83,12.86 6.11,13.65L5.64,14.12C4.46,15.29 4.46,17.19 5.64,18.36C6.81,19.54 8.71,19.54 9.88,18.36L13.41,14.83C14.59,13.66 14.59,11.76 13.41,10.59C13,10.2 13,9.56 13.41,9.17Z" />
-            </svg>
-              betterseqta.com
-            </a>
-
-          </div>
-        </div>
-        <div class="aboutcontainer">
-          <div>
-            <h1 class="addonitem" style="margin-top: 20px; margin-bottom: 5px;">Support Me</h1>
-            <a href='https://ko-fi.com/crazypersonalph' target='_blank' style="background: none !important; margin: 0; padding:0;"><img height='36' style='border:0px;height:36px;' src='${browser.runtime.getURL('/popup/kofi3.png')}' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-          </div>
-        </div>
-
-        <div class="aboutcontainer" style="color: rgb(155, 155, 155); font-size: 14px; margin-top: 7px;">
-        <p>Contact: betterseqta@crazypersonalph.com</p>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="menu-page hiddenmenu" id="shortcutpage">
-    <div class="selector-container" style="margin-bottom: 0; max-height: 17em; overflow-y:hidden;">
-      <div>
-        <div class="custom-shortcuts-button custom-shortcuts-buttons">Create Custom Shortcut</div>
-        <div class="custom-shortcuts-container">
-          <label for="shortcutname" class="custom-shortcuts-label">Shortcut Name:</label>
-          <input type="text" id="shortcutname" name="shortcutname" class="custom-shortcuts-field" placeholder="e.g. Google" maxlength="20">
-          <label for="shortcuturl" class="custom-shortcuts-label">URL:</label>
-          <input type="text" id="shortcuturl" name="shortcuturl" class="custom-shortcuts-field" placeholder="e.g. https://www.google.com">
-          <div class="custom-shortcuts-submit custom-shortcuts-buttons">Create</div>
-        </div>
-      </div>
-      <div class="menu-item-selection menushortcut">
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">YouTube</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="youtube">
-            <label for="youtube" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Outlook</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="outlook">
-            <label for="outlook" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Office</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="office">
-            <label for="office" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Spotify</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="spotify">
-            <label for="spotify" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Google</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="google">
-            <label for="google" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">DuckDuckGo</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox"
-              id="duckduckgo">
-              <label for="duckduckgo" class="onoffswitch-label"></label>
-            </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Cool Math Games</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox"
-              id="coolmathgames">
-              <label for="coolmathgames" class="onoffswitch-label"></label>
-            </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">SACE</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="sace">
-            <label for="sace" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Google Scholar</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox"
-              id="googlescholar">
-              <label for="googlescholar" class="onoffswitch-label"></label>
-            </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Gmail</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="gmail">
-            <label for="gmail" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Netflix</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="netflix">
-            <label for="netflix" class="onoffswitch-label"></label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="menu-page" id="miscpage">
-    <div class="selector-container" style="margin-bottom: 0;">
-      <div class="menu-item-selection">
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Notification Collector</h1>
-            <p class="item subitem">Uncaps the 9+ limit for notifications, showing the real number.</p>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="notification">
-          <label for="notification" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Lesson Alerts</h1>
-            <p class="item subitem">Sends a native browser notification ~5 minutes prior to lessons.</p>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="lessonalert">
-            <label for="lessonalert" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Animated Background</h1>
-            <p class="item subitem">Adds an animated background to BetterSEQTA. (May impact battery life)</p>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="animatedbk">
-          <label for="animatedbk" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Animated Background Speed</h1>
-            <p class="item subitem">Controls the speed of the animated background.</p>
-          </div>
-          <div class="bkslider">
-            <input type="range" id="bksliderinput" name="Animated Background Slider" min="1" max="200" />
-            <label for="bksliderinput" class="bkslider-label"/>
-          </div>
-        </div>
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Custom Theme Colour</h1>
-            <p class="item subitem">Customise the overall theme colour of SEQTA Learn.</p>
-          </div>
-          <div class="clr-field" style="justify-content: end; display: flex; margin: 5px;">
-            <button aria-labelledby="clr-open-label" style="width: 51px; right: 0px; border: 1px solid white;"></button>
-            <input type="text" id="colorpicker" class="coloris" style="width: 42px; border-radius: 3px;" />
-          </div>
-        </div>
-
-
-        <div class="item-container" style="height: 2em; margin-top: 0px;">
-          <div class="text-container">
-            <h1 class="addonitem">BetterSEQTA</h1>
-          </div>
-          <div class="onoffswitch" style="margin-bottom: 0px;"><input class="onoffswitch-checkbox notification" type="checkbox" id="onoff">
-            <label for="onoff" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
-
-
-  <div class="bottom-container">
-    <div class="applychanges" id="applychanges" style="height: 25px;">
-      <div style="margin-top:0px;">
-      <h5>Unsaved Changes</h5>
-      <h6>Click to apply.</h6>
-      </div>
-    </div>
-
-    <div></div>
-
-    <div style="position: absolute; bottom: 15px; right: 50px; color: rgb(177, 177, 177); display: flex; align-items:center;">
-    <p style="margin: 0; margin-right: 5px; color: white;">Now maintained by Crazypersonalph</p>
-    <p style="margin: 0; cursor:pointer; padding: 4px 5px; background: #ff5f5f; color:#1a1a1a;font-weight: 500; border-radius: 10px;" id="whatsnewsettings">What's new in v${browser.runtime.getManifest().version}</p></div>
-    <img src=${browser.runtime.getURL('popup/github.svg')} alt="" id="github">
-  </div></div>`)
-  document.body.append(Settings.firstChild)
+  fileref.appendChild(popup)
+  document.body.append(fileref)
 
   const container = document.getElementById('container')
   const extensionsettings = document.getElementById('ExtensionPopup')
+  console.log(extensionsettings)
   container.onclick = function () {
     if (!SettingsClicked) {
       extensionsettings.classList.add('hidden')
@@ -1818,10 +1565,12 @@ function AddBetterSEQTAElements (toggle) {
         menu.appendChild(a)
 
         editmenu = document.querySelector('#editmenu')
-        editmenu.addEventListener('click', function () {
-          if (!MenuOptionsOpen) {
-            OpenMenuOptions()
-          }
+        window.addEventListener('DOMContentLoaded', (event) => {
+          editmenu.addEventListener('click', function () {
+            if (!MenuOptionsOpen) {
+              OpenMenuOptions()
+            }
+          })
         })
 
         const menuCover = document.querySelector('#icon-cover')
@@ -1846,9 +1595,6 @@ function AddBetterSEQTAElements (toggle) {
           }
         })
       }
-
-      CallExtensionSettings()
-      RunExtensionSettingsJS()
 
       if (toggle) {
         // Creates settings and dashboard buttons next to alerts
@@ -1877,6 +1623,7 @@ function AddBetterSEQTAElements (toggle) {
             const result = browser.storage.local.get(['DarkMode'])
             function actuallyDarkenEverything (item) {
               const alliframes = document.getElementsByTagName('iframe')
+              console.log(alliframes)
               const fileref = GetCSSElement('inject/iframe.css')
 
               if (!item.DarkMode) {
@@ -1886,9 +1633,11 @@ function AddBetterSEQTAElements (toggle) {
                 LightDarkModeElement.firstChild.innerHTML = '<defs><clipPath id="__lottie_element_80"><rect width="24" height="24" x="0" y="0"></rect></clipPath></defs><g clip-path="url(#__lottie_element_80)"><g style="display: block;" transform="matrix(1,0,0,1,12,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,-4 C-2.2100000381469727,-4 -4,-2.2100000381469727 -4,0 C-4,2.2100000381469727 -2.2100000381469727,4 0,4 C2.2100000381469727,4 4,2.2100000381469727 4,0 C4,-2.2100000381469727 2.2100000381469727,-4 0,-4z"></path></g></g><g style="display: block;" transform="matrix(1,0,0,1,12,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,6 C-3.309999942779541,6 -6,3.309999942779541 -6,0 C-6,-3.309999942779541 -3.309999942779541,-6 0,-6 C3.309999942779541,-6 6,-3.309999942779541 6,0 C6,3.309999942779541 3.309999942779541,6 0,6z M8,-3.309999942779541 C8,-3.309999942779541 8,-8 8,-8 C8,-8 3.309999942779541,-8 3.309999942779541,-8 C3.309999942779541,-8 0,-11.3100004196167 0,-11.3100004196167 C0,-11.3100004196167 -3.309999942779541,-8 -3.309999942779541,-8 C-3.309999942779541,-8 -8,-8 -8,-8 C-8,-8 -8,-3.309999942779541 -8,-3.309999942779541 C-8,-3.309999942779541 -11.3100004196167,0 -11.3100004196167,0 C-11.3100004196167,0 -8,3.309999942779541 -8,3.309999942779541 C-8,3.309999942779541 -8,8 -8,8 C-8,8 -3.309999942779541,8 -3.309999942779541,8 C-3.309999942779541,8 0,11.3100004196167 0,11.3100004196167 C0,11.3100004196167 3.309999942779541,8 3.309999942779541,8 C3.309999942779541,8 8,8 8,8 C8,8 8,3.309999942779541 8,3.309999942779541 C8,3.309999942779541 11.3100004196167,0 11.3100004196167,0 C11.3100004196167,0 8,-3.309999942779541 8,-3.309999942779541z"></path></g></g></g>'
 
                 for (let i = 0; i < alliframes.length; i++) {
-                  const element = alliframes[i]
-                  element.contentDocument.documentElement.childNodes[1].style.color = 'white'
-                  element.contentDocument.documentElement.firstChild.appendChild(fileref)
+                  if (alliframes[i].src !== 'chrome-extension://mlmhldgbjkdfokfhfojnloinnaoecifc/popup/info.html') {
+                    const element = alliframes[i]
+                    element.contentDocument.documentElement.childNodes[1].style.color = 'white'
+                    element.contentDocument.documentElement.firstChild.appendChild(fileref)
+                  }
                 }
               } else {
                 document.documentElement.style.setProperty('--background-primary', '#ffffff')
@@ -1897,9 +1646,11 @@ function AddBetterSEQTAElements (toggle) {
                 LightDarkModeElement.firstChild.innerHTML = '<defs><clipPath id="__lottie_element_263"><rect width="24" height="24" x="0" y="0"></rect></clipPath></defs><g clip-path="url(#__lottie_element_263)"><g style="display: block;" transform="matrix(1.5,0,0,1.5,7,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,-4 C-2.2100000381469727,-4 -1.2920000553131104,-2.2100000381469727 -1.2920000553131104,0 C-1.2920000553131104,2.2100000381469727 -2.2100000381469727,4 0,4 C2.2100000381469727,4 4,2.2100000381469727 4,0 C4,-2.2100000381469727 2.2100000381469727,-4 0,-4z"></path></g></g><g style="display: block;" transform="matrix(-1,0,0,-1,12,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,6 C-3.309999942779541,6 -6,3.309999942779541 -6,0 C-6,-3.309999942779541 -3.309999942779541,-6 0,-6 C3.309999942779541,-6 6,-3.309999942779541 6,0 C6,3.309999942779541 3.309999942779541,6 0,6z M8,-3.309999942779541 C8,-3.309999942779541 8,-8 8,-8 C8,-8 3.309999942779541,-8 3.309999942779541,-8 C3.309999942779541,-8 0,-11.3100004196167 0,-11.3100004196167 C0,-11.3100004196167 -3.309999942779541,-8 -3.309999942779541,-8 C-3.309999942779541,-8 -8,-8 -8,-8 C-8,-8 -8,-3.309999942779541 -8,-3.309999942779541 C-8,-3.309999942779541 -11.3100004196167,0 -11.3100004196167,0 C-11.3100004196167,0 -8,3.309999942779541 -8,3.309999942779541 C-8,3.309999942779541 -8,8 -8,8 C-8,8 -3.309999942779541,8 -3.309999942779541,8 C-3.309999942779541,8 0,11.3100004196167 0,11.3100004196167 C0,11.3100004196167 3.309999942779541,8 3.309999942779541,8 C3.309999942779541,8 8,8 8,8 C8,8 8,3.309999942779541 8,3.309999942779541 C8,3.309999942779541 11.3100004196167,0 11.3100004196167,0 C11.3100004196167,0 8,-3.309999942779541 8,-3.309999942779541z"></path></g></g></g>'
 
                 for (let i = 0; i < alliframes.length; i++) {
-                  const element = alliframes[i]
-                  element.contentDocument.documentElement.childNodes[1].style.color = 'black'
-                  element.contentDocument.documentElement.firstChild.lastChild.remove()
+                  if (alliframes[i].src !== 'chrome-extension://mlmhldgbjkdfokfhfojnloinnaoecifc/popup/info.html') {
+                    const element = alliframes[i]
+                    element.contentDocument.documentElement.childNodes[1].style.color = 'black'
+                    element.contentDocument.documentElement.firstChild.lastChild.remove()
+                  }
                 }
               }
               const tooltipstring = GetLightDarkModeString(!item.DarkMode)
@@ -1918,11 +1669,14 @@ function AddBetterSEQTAElements (toggle) {
         const ContentDiv = document.getElementById('content')
         ContentDiv.append(SettingsButton.firstChild)
       }
+      CallExtensionSettings()
+      RunExtensionSettingsJS()
 
       const AddedSettings = document.getElementById('AddedSettings')
       const extensionsettings = document.getElementById('ExtensionPopup')
       AddedSettings.addEventListener('click', function () {
-        extensionsettings.classList.toggle('hidden')
+        console.log(extensionsettings)
+        extensionsettings.classList.remove('hidden')
         SettingsClicked = true
       })
     }
