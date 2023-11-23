@@ -1,110 +1,18 @@
-import * as DOMPurify from 'dompurify'
+import { stringToHTML } from './functions/stringToHTML'
+import { ShortcutLinks } from './functions/ShortcutLinks'
+import { MenuitemSVGKey } from './functions/MenuitemSVGKey'
+import { onError } from './functions/onError'
+import { CreateBackground } from './functions/CreateBackground'
+import { response } from './functions/GetPrefs'
+const browser = require('webextension-polyfill')
 const isChrome = window.chrome
+
 let SettingsClicked = false
 let MenuOptionsOpen = false
 let UserInitalCode = ''
 let currentSelectedDate = new Date()
 let WhatsNewOpen = false
-let LessonInterval
-const stringToHTML = function (str, styles = false) {
-  const parser = new DOMParser()
-  str = DOMPurify.sanitize(str, { ADD_ATTR: ['onclick'] })
-  const doc = parser.parseFromString(str, 'text/html')
-  if (styles) { doc.body.style.cssText = 'height: auto; overflow: scroll; margin: 0px; background: var(--background-primary);' }
-  return doc.body
-}
-
-const ShortcutLinks = {
-  YouTube: {
-    link: 'https://www.youtube.com/',
-    viewBox: '0 0 24 24',
-    icon: 'M10,15L15.19,12L10,9V15M21.56,7.17C21.69,7.64 21.78,8.27 21.84,9.07C21.91,9.87 21.94,10.56 21.94,11.16L22,12C22,14.19 21.84,15.8 21.56,16.83C21.31,17.73 20.73,18.31 19.83,18.56C19.36,18.69 18.5,18.78 17.18,18.84C15.88,18.91 14.69,18.94 13.59,18.94L12,19C7.81,19 5.2,18.84 4.17,18.56C3.27,18.31 2.69,17.73 2.44,16.83C2.31,16.36 2.22,15.73 2.16,14.93C2.09,14.13 2.06,13.44 2.06,12.84L2,12C2,9.81 2.16,8.2 2.44,7.17C2.69,6.27 3.27,5.69 4.17,5.44C4.64,5.31 5.5,5.22 6.82,5.16C8.12,5.09 9.31,5.06 10.41,5.06L12,5C16.19,5 18.8,5.16 19.83,5.44C20.73,5.69 21.31,6.27 21.56,7.17Z'
-
-  },
-  Outlook: {
-    link: 'https://outlook.office365.com/mail/inbox',
-    viewBox: '0 0 24 24',
-    icon: 'M8.56 12.03Q8.56 12.41 8.5 12.76 8.39 13.1 8.2 13.38 8 13.65 7.71 13.81 7.41 13.97 7 13.97 6.58 13.97 6.29 13.8 6 13.63 5.81 13.35 5.62 13.07 5.54 12.72 5.45 12.37 5.45 12 5.45 11.64 5.54 11.28 5.62 10.93 5.81 10.65 6 10.37 6.31 10.2 6.61 10.03 7.03 10.03 7.46 10.03 7.75 10.2 8.05 10.38 8.23 10.66 8.41 10.95 8.5 11.3 8.56 11.66 8.56 12.03M22 12V19.81Q22 20.2 21.73 20.5 21.45 20.75 21.06 20.75H7.94Q7.55 20.75 7.27 20.5 7 20.2 7 19.81V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H8.25V4.13Q8.25 3.76 8.5 3.5 8.76 3.25 9.13 3.25H19.87Q20.24 3.25 20.5 3.5 20.75 3.76 20.75 4.13V11.04L21.79 11.64H21.8Q21.88 11.7 21.94 11.8 22 11.89 22 12M17 5.13V7.63H19.5V5.13M17 8.88V11.38H19.5V8.88M17 12.63V14.15L19.54 12.63M12.63 5.13V7.63H15.75V5.13M12.63 8.88V11.38H15.75V8.88M12.63 12.63V14.32L14.64 15.56L15.75 14.9V12.63M9.5 5.13V7H11.27Q11.33 7 11.38 7.04V5.12M7 15.32Q7.73 15.32 8.32 15.06 8.9 14.8 9.31 14.35 9.71 13.9 9.91 13.28 10.12 12.66 10.13 11.94 10.13 11.25 9.92 10.65 9.72 10.06 9.32 9.62 8.93 9.18 8.37 8.93 7.8 8.68 7.08 8.68 6.31 8.68 5.71 8.93 5.12 9.18 4.71 9.63 4.3 10.09 4.09 10.71 3.88 11.34 3.88 12.08 3.88 12.78 4.09 13.38 4.31 13.97 4.71 14.4 5.11 14.83 5.68 15.08 6.26 15.32 7 15.32M8.25 19.5H18.57L12 15.4V16.17Q12 16.5 11.76 16.76 11.5 17 11.17 17H8.25M20.75 19.39V13.36L15.83 16.31Z'
-  },
-  Office: {
-    link: 'http://office.com',
-    viewBox: '0 0 24 24',
-    icon: 'M19.94 5.59V18.39Q19.94 19.06 19.55 19.59 19.16 20.11 18.5 20.29L12.77 21.94Q12.65 21.97 12.5 22H12.28Q11.95 22 11.68 21.91 11.41 21.82 11.13 21.67L7.38 19.55Q7.17 19.43 7.05 19.24 6.93 19.05 6.93 18.81 6.93 18.45 7.19 18.2 7.44 17.95 7.8 17.95H12.66V6.14L9 7.44Q8.57 7.6 8.3 8 8.03 8.38 8.03 8.85V15.58Q8.03 16 7.82 16.34 7.62 16.68 7.25 16.88L5.53 17.82Q5.29 17.95 5.05 17.95 4.64 17.95 4.35 17.66 4.06 17.37 4.06 16.95V7.47Q4.06 6.95 4.33 6.5 4.61 6 5.06 5.74L11.22 2.24Q11.43 2.12 11.67 2.06 11.91 2 12.15 2 12.32 2 12.46 2.03 12.6 2.05 12.77 2.1L18.5 3.69Q18.83 3.78 19.09 3.96 19.35 4.14 19.54 4.39 19.74 4.65 19.84 4.95 19.94 5.26 19.94 5.59M18.62 18.39V5.59Q18.62 5.36 18.5 5.19 18.35 5 18.13 4.96L15.31 4.18Q15 4.09 14.65 4 14.32 3.89 14 3.81V20.21L18.13 19Q18.35 18.96 18.5 18.79 18.62 18.62 18.62 18.39Z'
-  },
-  Spotify: {
-    link: 'https://accounts.spotify.com/en/login',
-    viewBox: '0 0 24 24',
-    icon: 'M17.9,10.9C14.7,9 9.35,8.8 6.3,9.75C5.8,9.9 5.3,9.6 5.15,9.15C5,8.65 5.3,8.15 5.75,8C9.3,6.95 15.15,7.15 18.85,9.35C19.3,9.6 19.45,10.2 19.2,10.65C18.95,11 18.35,11.15 17.9,10.9M17.8,13.7C17.55,14.05 17.1,14.2 16.75,13.95C14.05,12.3 9.95,11.8 6.8,12.8C6.4,12.9 5.95,12.7 5.85,12.3C5.75,11.9 5.95,11.45 6.35,11.35C10,10.25 14.5,10.8 17.6,12.7C17.9,12.85 18.05,13.35 17.8,13.7M16.6,16.45C16.4,16.75 16.05,16.85 15.75,16.65C13.4,15.2 10.45,14.9 6.95,15.7C6.6,15.8 6.3,15.55 6.2,15.25C6.1,14.9 6.35,14.6 6.65,14.5C10.45,13.65 13.75,14 16.35,15.6C16.7,15.75 16.75,16.15 16.6,16.45M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z'
-  },
-  Google: {
-    link: 'https://google.com',
-    viewBox: '0 0 24 24',
-    icon: 'M12,20L15.46,14H15.45C15.79,13.4 16,12.73 16,12C16,10.8 15.46,9.73 14.62,9H19.41C19.79,9.93 20,10.94 20,12A8,8 0 0,1 12,20M4,12C4,10.54 4.39,9.18 5.07,8L8.54,14H8.55C9.24,15.19 10.5,16 12,16C12.45,16 12.88,15.91 13.29,15.77L10.89,19.91C7,19.37 4,16.04 4,12M15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9A3,3 0 0,1 15,12M12,4C14.96,4 17.54,5.61 18.92,8H12C10.06,8 8.45,9.38 8.08,11.21L5.7,7.08C7.16,5.21 9.44,4 12,4M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z'
-  },
-  DuckDuckGo: {
-    link: 'https://duckduckgo.com/',
-    viewBox: '0 0 32 32',
-    icon: 'M16 0c-8.839 0-16 7.161-16 16s7.161 16 16 16c8.839 0 16-7.161 16-16s-7.161-16-16-16zM16 30.667c-8.099 0-14.667-6.568-14.667-14.667s6.568-14.667 14.667-14.667c8.099 0 14.667 6.568 14.667 14.667s-6.568 14.667-14.667 14.667zM29.625 16c0 6.406-4.422 11.776-10.38 13.234-0.359-0.698-0.708-1.359-1-1.917 0.859 0.328 2.573 0.953 2.943 0.818 0.505-0.193 0.38-4.198-0.182-4.328-0.453-0.099-2.177 1.12-2.859 1.615l0.047 0.208c0.104 0.526 0.193 1.323 0.042 1.661 0 0.005-0.005 0.016-0.005 0.016-0.021 0.047-0.052 0.089-0.094 0.12-0.375 0.25-1.438 0.38-2 0.25-0.031-0.005-0.057-0.016-0.089-0.026-0.922 0.526-2.677 1.479-3 1.297-0.438-0.255-0.5-3.573-0.438-4.385 0.047-0.615 2.203 0.38 3.255 0.906 0.234-0.219 0.802-0.365 1.307-0.417-0.76-1.849-1.318-3.969-0.979-5.474 0 0.005 0.005 0.005 0.005 0.005 0.474 0.328 3.641 1.401 5.214 1.37s4.151-0.99 3.87-1.766c-0.281-0.771-2.849 0.682-5.521 0.432-1.984-0.182-2.333-1.073-1.896-1.719 0.552-0.818 1.557 0.151 3.214-0.344 1.661-0.495 3.984-1.38 4.844-1.859 1.995-1.115-0.833-1.573-1.5-1.266-0.63 0.297-2.828 0.849-3.849 1.094 0.568-2.021-0.807-5.531-2.344-7.068-0.5-0.5-1.271-0.813-2.141-0.979-0.333-0.458-0.87-0.896-1.63-1.302-1.474-0.771-3.156-1.047-4.797-0.781l-0.031 0.005-0.042 0.005 0.005 0.005c-0.198 0.036-0.318 0.104-0.479 0.13 0.198 0.021 0.943 0.37 1.411 0.557-0.234 0.089-0.552 0.146-0.797 0.245-0.094 0.016-0.182 0.036-0.271 0.073-0.229 0.109-0.406 0.5-0.401 0.688 1.12-0.115 2.776-0.031 3.99 0.328-0.859 0.12-1.646 0.344-2.214 0.646-0.021 0.010-0.042 0.021-0.068 0.036-0.068 0.026-0.141 0.057-0.198 0.089-1.823 0.958-2.63 3.203-2.151 5.896 0.432 2.432 2.219 10.786 3.052 14.755-5.297-1.87-9.094-6.917-9.094-12.854 0-7.526 6.099-13.625 13.625-13.625s13.625 6.099 13.625 13.625zM12.125 12.776c-0.557 0-1.010 0.453-1.010 1.010s0.453 1.010 1.010 1.010c1.349 0 1.349-2.021 0-2.021zM12.578 13.708c-0.146 0-0.26-0.115-0.26-0.26 0-0.141 0.115-0.26 0.26-0.26 0.349 0 0.349 0.521 0 0.521zM18.875 12.318c-0.49-0.016-0.901 0.375-0.901 0.87 0 0.49 0.411 0.885 0.901 0.865 1.156 0 1.156-1.734 0-1.734zM19.26 13.12c-0.12 0-0.224-0.099-0.224-0.224 0-0.12 0.104-0.224 0.224-0.224 0.302 0 0.302 0.448 0 0.448zM12.417 10.859c0 0-0.76-0.344-1.5 0.12-0.74 0.469-0.714 0.943-0.714 0.943s-0.391-0.875 0.656-1.307c1.047-0.427 1.557 0.245 1.557 0.245zM19.401 10.792c0 0-0.547-0.313-0.974-0.307-0.875 0.010-1.109 0.396-1.109 0.396s0.146-0.917 1.26-0.734c0.365 0.068 0.672 0.307 0.823 0.646z'
-  },
-  CoolMathGames: {
-    link: 'https://coolmathgames.com/',
-    viewBox: '0 0 24 24',
-    icon: 'M16.5,9L13.5,12L16.5,15H22V9M9,16.5V22H15V16.5L12,13.5M7.5,9H2V15H7.5L10.5,12M15,7.5V2H9V7.5L12,10.5L15,7.5Z'
-  },
-  SACE: {
-    link: 'https://apps.sace.sa.edu.au/students-online/login.do',
-    viewBox: '0 0 125.2 125',
-    icon: 'M103,40.1H84.8v-18C84.8,9.9,74.8,0,62.6,0C50.4,0,40.3,9.9,40.3,22.1c0,12.2,10,22.1,22.2,22.1h18.1v36H44.5v-18c0-12.2-10-22.1-22.2-22.1S0,50,0,62.2s10,22.1,22.2,22.1h18.1v18c0,12.2,10,22.1,22.2,22.1s22.2-9.9,22.2-22.1v-18h18.1c12.4,0,22.4-9.9,22.4-22.1S115.2,40.1,103,40.1z M40.3,80.2H22.2c-10,0-18.1-8.1-18.1-18s8.1-18,18.1-18s18.1,8.1,18.1,18V80.2zM80.7,102.3c0,9.9-8.1,18-18.1,18s-18.1-8.1-18.1-18v-18h36.2V102.3z M80.7,40.1H62.6c-10,0-18.1-8.1-18.1-18c0-9.9,8.1-18,18.1-18s18.1,8.1,18.1,18V40.1z M102.9,80.2H84.8v-36h18.1c10,0,18.1,8.1,18.1,18S112.9,80.2,102.9,80.2z'
-  },
-  GoogleScholar: {
-    link: 'https://scholar.google.com',
-    viewBox: '0 0 24 24',
-    icon: 'M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.16,22 12.25,22C17.6,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z'
-  },
-  Gmail: {
-    link: 'https://mail.google.com',
-    viewBox: '0 0 24 24',
-    icon: 'M20,18H18V9.25L12,13L6,9.25V18H4V6H5.2L12,10.25L18.8,6H20M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z'
-  },
-  Netflix: {
-    link: 'https://netflix.com',
-    viewBox: '0 0 24 24',
-    icon: 'M6.5,2H10.5L13.44,10.83L13.5,2H17.5V22C16.25,21.78 14.87,21.64 13.41,21.58L10.5,13L10.43,21.59C9.03,21.65 7.7,21.79 6.5,22V2Z'
-  }
-}
-
-const MenuitemSVGKey = {
-  welcome: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M7.03 4.95L3.5 8.5C.17 11.81 .17 17.19 3.5 20.5S12.19 23.83 15.5 20.5L21.5 14.5C22.5 13.53 22.5 11.94 21.5 10.96C21.4 10.84 21.27 10.73 21.13 10.64L21.5 10.25C22.5 9.28 22.5 7.69 21.5 6.71C21.36 6.55 21.17 6.41 21 6.3C21.38 5.38 21.21 4.28 20.46 3.53C19.59 2.66 18.24 2.57 17.26 3.25C17.16 3.1 17.05 2.96 16.92 2.83C15.95 1.86 14.36 1.86 13.38 2.83L10.87 5.34C10.78 5.2 10.67 5.07 10.55 4.95C9.58 4 8 4 7.03 4.95M8.44 6.37C8.64 6.17 8.95 6.17 9.15 6.37S9.35 6.88 9.15 7.08L5.97 10.26C7.14 11.43 7.14 13.33 5.97 14.5L7.38 15.91C8.83 14.46 9.2 12.34 8.5 10.55L14.8 4.25C15 4.05 15.31 4.05 15.5 4.25S15.71 4.76 15.5 4.96L10.91 9.56L12.32 10.97L18.33 4.96C18.53 4.76 18.84 4.76 19.04 4.96C19.24 5.16 19.24 5.47 19.04 5.67L13.03 11.68L14.44 13.09L19.39 8.14C19.59 7.94 19.9 7.94 20.1 8.14C20.3 8.34 20.3 8.65 20.1 8.85L14.44 14.5L15.85 15.92L19.39 12.38C19.59 12.18 19.9 12.18 20.1 12.38C20.3 12.58 20.3 12.89 20.1 13.09L14.1 19.1C11.56 21.64 7.45 21.64 4.91 19.1S2.37 12.45 4.91 9.91L8.44 6.37M23 17C23 20.31 20.31 23 17 23V21.5C19.5 21.5 21.5 19.5 21.5 17H23M1 7C1 3.69 3.69 1 7 1V2.5C4.5 2.5 2.5 4.5 2.5 7H1Z" />
-  </svg>`,
-  assessments: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M6 20H13V22H6C4.89 22 4 21.11 4 20V4C4 2.9 4.89 2 6 2H18C19.11 2 20 2.9 20 4V12.54L18.5 11.72L18 12V4H13V12L10.5 9.75L8 12V4H6V20M24 17L18.5 14L13 17L18.5 20L24 17M15 19.09V21.09L18.5 23L22 21.09V19.09L18.5 21L15 19.09Z" />
-</svg>`,
-  courses: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M19 1L14 6V17L19 12.5V1M21 5V18.5C19.9 18.15 18.7 18 17.5 18C15.8 18 13.35 18.65 12 19.5V6C10.55 4.9 8.45 4.5 6.5 4.5C4.55 4.5 2.45 4.9 1 6V20.65C1 20.9 1.25 21.15 1.5 21.15C1.6 21.15 1.65 21.1 1.75 21.1C3.1 20.45 5.05 20 6.5 20C8.45 20 10.55 20.4 12 21.5C13.35 20.65 15.8 20 17.5 20C19.15 20 20.85 20.3 22.25 21.05C22.35 21.1 22.4 21.1 22.5 21.1C22.75 21.1 23 20.85 23 20.6V6C22.4 5.55 21.75 5.25 21 5M10 18.41C8.75 18.09 7.5 18 6.5 18C5.44 18 4.18 18.19 3 18.5V7.13C3.91 6.73 5.14 6.5 6.5 6.5C7.86 6.5 9.09 6.73 10 7.13V18.41Z" />
-</svg>`,
-  dashboard: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z" />
-</svg>`,
-  messages: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M8,14H6V12H8V14M8,11H6V9H8V11M8,8H6V6H8V8M15,14H10V12H15V14M18,11H10V9H18V11M18,8H10V6H18V8Z" />
-</svg>`,
-  notices: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M12,15H10V13H12V15M18,15H14V13H18V15M8,11H6V9H8V11M18,11H10V9H18V11M20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20M4,6V18H20V6H4Z" />
-</svg>`,
-  portals: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M15,4A8,8 0 0,1 23,12A8,8 0 0,1 15,20A8,8 0 0,1 7,12A8,8 0 0,1 15,4M15,18A6,6 0 0,0 21,12A6,6 0 0,0 15,6A6,6 0 0,0 9,12A6,6 0 0,0 15,18M3,12C3,14.61 4.67,16.83 7,17.65V19.74C3.55,18.85 1,15.73 1,12C1,8.27 3.55,5.15 7,4.26V6.35C4.67,7.17 3,9.39 3,12Z" />
-</svg>`,
-  reports: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M18 2H12V9L9.5 7.5L7 9V2H6A2 2 0 0 0 4 4V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V4A2 2 0 0 0 18 2M14 12A2 2 0 1 1 12 14A2 2 0 0 1 14 12M18 20H10V19C10 17.67 12.67 17 14 17S18 17.67 18 19Z" />
-</svg>`,
-  settings: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
-</svg>`,
-  timetable: `<svg style="width:24px;height:24px" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M9,10V12H7V10H9M13,10V12H11V10H13M17,10V12H15V10H17M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H6V1H8V3H16V1H18V3H19M19,19V8H5V19H19M9,14V16H7V14H9M13,14V16H11V14H13M17,14V16H15V14H17Z" />
-</svg>`
-}
+let LessonInterval = null
 
 function loading () {
   const loadinghtml = stringToHTML(
@@ -164,7 +72,7 @@ function loading () {
     <svg height="135" width="135" viewBox="0 0 1000 1000" class="small-circle svg"><path xmlns="http://www.w3.org/2000/svg" style="fill:#ededed; stroke:none;" d="M456 954L455.999 938C455.986 936.008 456.301 933.282 454.972 931.603C453.594 929.862 450.977 930.062 448.999 929.835C443.991 929.258 438.987 928.463 434 927.728C414.788 924.898 395.564 920.733 377 915.025C300.826 891.602 231.835 849.314 178.17 790C106.263 710.526 63.7248 603.522 65.0039 496C65.7806 430.71 81.6532 365.691 110.259 307C130.156 266.177 157.727 228.746 189.039 196C222.33 161.185 262.986 132.26 306 110.753C345.737 90.8846 389.756 75.6209 434 70L434 48C417.656 48.1353 400.764 53.1855 385 57.1265C338.501 68.7513 294.622 88.2739 254 113.576C215.656 137.46 181.298 167.82 151.87 202C33.2034 339.827 7.62905 544.971 91.2585 707C112.853 748.839 140.699 787.699 174 821C210.688 857.688 253.047 888.542 300 910.781C332.493 926.171 365.923 937.713 401 945.65C418.745 949.666 437.768 953.624 456 954z"/></svg>
     <svg height="180" width="180" viewBox="0 0 1000 1000" class="big-circle svg"><path xmlns="http://www.w3.org/2000/svg" style="fill:#ededed; stroke:none;" d="M454 952L454 887C441.324 886.456 428.346 883.444 416 880.65C389.799 874.722 364.497 866.349 340 855.306C205.92 794.861 116.45 660.408 110.039 514C108.593 480.976 112.302 447.246 119.424 415C144.931 299.518 226.1 198.275 333 147.781C389.157 121.255 450.99 108.496 513 110.015C612.241 112.446 711.495 157.399 779.961 229C839.544 291.312 879.215 372.892 887.831 459C893.323 513.894 887.624 569.466 870.329 622C836.537 724.647 758.42 810.937 660 855.306C635.503 866.349 610.201 874.722 584 880.65C571.383 883.505 557.974 886.732 545 887L545 952C562.916 951.63 581.566 947.595 599 943.65C637.149 935.018 673.043 921.725 708 904.247C753.184 881.655 792.42 850.594 828 815C859.416 783.572 885.414 745.666 905.247 706C933.723 649.048 949.566 588.445 953.911 525C963.014 392.066 906.622 254.399 808 165.17C769.47 130.31 725.8 101.975 678 81.5787C629.733 60.9833 575.64 47.3041 523 46.0146C469.032 44.6927 415.748 49.9443 364 66.0255C223.375 109.726 109.726 223.376 66.0255 364C14.4181 530.066 63.7205 715.347 191 833.911C229.196 869.491 274.051 897.962 322 918.421C362.806 935.833 409.371 950.084 454 952z"/></svg>
     <svg height="220" width="220" viewBox="0 0 1000 1000" class="outer-circle svg"><path xmlns="http://www.w3.org/2000/svg" style="fill:#ededed; stroke:none;" d="M456 954L456 946C438.715 945.258 420.843 941.462 404 937.65C369.403 929.822 335.739 918.116 304 902.247C255.981 878.237 211.768 846.374 175.09 807C62.5744 686.214 23.1598 509.033 78.6921 353C96.4653 303.062 122.84 256.974 156.424 216C207.709 153.43 278.099 103.658 355 78C372.453 72.1767 389.992 67.0399 408 63.2107C413.31 62.0816 418.647 60.9853 424 60.0811C426.508 59.6575 430.352 59.6852 432.397 57.9869C434.897 55.9098 434 50.8766 434 48C417.656 48.1353 400.764 53.1855 385 57.1265C338.517 68.7473 294.608 88.2827 254 113.576C215.673 137.45 181.285 167.835 151.87 202C33.9725 338.933 8.37009 541.243 89.2485 703C110.949 746.4 139.693 786.693 174 821C210.688 857.688 253.047 888.542 300 910.781C332.484 926.167 365.934 937.716 401 945.65C418.745 949.666 437.768 953.624 456 954z"/></svg>
-    <div style="position: absolute;bottom: 0;right: 0;padding: 10px;color: #4f4f4f;text-anchor: middle;font-size: 20px;">v${chrome.runtime.getManifest().version}</div></div>`
+    <div style="position: absolute;bottom: 0;right: 0;padding: 10px;color: #4f4f4f;text-anchor: middle;font-size: 20px;">v${browser.runtime.getManifest().version}</div></div>`
   )
   const html = document.getElementsByTagName('html')[0]
   html.append(loadinghtml.firstChild)
@@ -192,19 +100,25 @@ function SetDisplayNone (ElementName) {
 
 function ApplyCSSToHiddenMenuItems () {
   let stylesheetInnerText = ''
-  chrome.storage.local.get(null, function (result) {
-    for (let i = 0; i < Object.keys(result.menuitems).length; i++) {
-      if (!Object.values(result.menuitems)[i].toggle) {
-        stylesheetInnerText += SetDisplayNone(Object.keys(result.menuitems)[i])
+  const result = browser.storage.local.get()
+  function Menu (item) {
+    for (let i = 0; i < Object.keys(item.menuitems).length; i++) {
+      if (!Object.values(item.menuitems)[i].toggle) {
+        stylesheetInnerText += SetDisplayNone(Object.keys(item.menuitems)[i])
         console.log(
-          `[BetterSEQTA] Hiding ${Object.keys(result.menuitems)[i]} menu item`
+          `[BetterSEQTA] Hiding ${Object.keys(item.menuitems)[i]} menu item`
         )
       }
     }
     const MenuItemStyle = document.createElement('style')
     MenuItemStyle.innerText = stylesheetInnerText
     document.head.appendChild(MenuItemStyle)
-  })
+  }
+
+  function onError (error) {
+    console.log(`Error: ${error}`)
+  }
+  result.then(Menu, onError)
 }
 
 function OpenWhatsNewPopup () {
@@ -217,13 +131,13 @@ function OpenWhatsNewPopup () {
 
   const header = stringToHTML(`<div class="whatsnewHeader">
   <h1>What's New</h1>
-  <p>BetterSEQTA V${chrome.runtime.getManifest().version}</p>
+  <p>BetterSEQTA V${browser.runtime.getManifest().version}</p>
   </div>`).firstChild
 
   const imagecont = document.createElement('div')
   imagecont.classList.add('whatsnewImgContainer')
   const image = document.createElement('img')
-  image.src = chrome.runtime.getURL('icons/betterseqta-dark-icon.png')
+  image.src = browser.runtime.getURL('icons/betterseqta-dark-icon.png')
   image.classList.add('whatsnewImg')
   imagecont.append(image)
 
@@ -243,9 +157,9 @@ function OpenWhatsNewPopup () {
   <h1>Independent Light Mode and Dark Mode</h1><li>Dark mode and Light mode are now available to pick alongside your chosen Theme Colour. Your Theme Colour will now become an accent colour for the page.
   Light/Dark mode can be toggled with the new button, found in the top-right of the menu bar.
   </li>
-  <img style="width:150px;margin-bottom:5px" src="${chrome.runtime.getURL('inject/preview/lightdarkmode.png')}">
+  <img style="width:150px;margin-bottom:5px" src="${browser.runtime.getURL('inject/preview/lightdarkmode.png')}">
   <h1>Create Custom Shortcuts</h1><li>Found in the BetterSEQTA Settings menu, custom shortcuts can now be created with a name and URL of your choice.</li>
-  <img style="width:150px;" src="${chrome.runtime.getURL('inject/preview/customshortcut.png')}">
+  <img style="width:150px;" src="${browser.runtime.getURL('inject/preview/customshortcut.png')}">
   </div>
   `
   ).firstChild
@@ -254,14 +168,9 @@ function OpenWhatsNewPopup () {
   <div class="whatsnewFooter">
   <div>
   Report bugs and feedback: 
-  <a href="https://github.com/Nulkem/betterseqta" target="_blank" style="background: none !important; margin: 0 5px; padding:0;"><img style="filter: invert(99%) sepia(0%) saturate(627%) hue-rotate(255deg) brightness(122%) contrast(100%);" height="23" src="${chrome.runtime.getURL('/popup/github.svg')}" alt=""></a>
-  <a href="https://chrome.google.com/webstore/detail/betterseqta/boikofabjaholheekefimfojfncpjfib" target="_blank" style="background: none !important; margin: 0 5px; padding:0;">
-  <svg style="width:25px;height:25px" viewBox="0 0 24 24">
-    <path fill="white" d="M12,20L15.46,14H15.45C15.79,13.4 16,12.73 16,12C16,10.8 15.46,9.73 14.62,9H19.41C19.79,9.93 20,10.94 20,12A8,8 0 0,1 12,20M4,12C4,10.54 4.39,9.18 5.07,8L8.54,14H8.55C9.24,15.19 10.5,16 12,16C12.45,16 12.88,15.91 13.29,15.77L10.89,19.91C7,19.37 4,16.04 4,12M15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9A3,3 0 0,1 15,12M12,4C14.96,4 17.54,5.61 18.92,8H12C10.06,8 8.45,9.38 8.08,11.21L5.7,7.08C7.16,5.21 9.44,4 12,4M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
-  </svg>
-  </a>
+  <a href="https://github.com/crazypersonalph/betterseqta" target="_blank" style="background: none !important; margin: 0 5px; padding:0;"><img style="filter: invert(99%) sepia(0%) saturate(627%) hue-rotate(255deg) brightness(122%) contrast(100%);" height="23" src="${browser.runtime.getURL('popup/github.svg')}" alt=""></a>
   </div>
-  <div>Support me: <a href="https://ko-fi.com/O4O5AOFX9" target="_blank" style="background: none !important; margin:0;margin-left:6px; padding:0;"><img height="25" style="border:0px;height:25px;" src="${chrome.runtime.getURL('/popup/kofi3.png')}" border="0" alt="Buy Me a Coffee at ko-fi.com"></a></div>
+  <div>Support me: <a href="https://ko-fi.com/crazypersonalph" target="_blank" style="background: none !important; margin:0;margin-left:6px; padding:0;"><img height="25" style="border:0px;height:25px;" src="${browser.runtime.getURL('popup/kofi3.png')}" border="0" alt="Buy Me a Coffee at ko-fi.com"></a></div>
   </div>
   `).firstChild
 
@@ -279,7 +188,7 @@ function OpenWhatsNewPopup () {
   document.getElementById('container').append(background)
   document.getElementById('container').append(container)
 
-  chrome.storage.local.remove(['justupdated'])
+  browser.storage.local.remove(['justupdated'])
 
   const bkelement = document.getElementById('whatsnewbk')
   bkelement.addEventListener('click', function () {
@@ -299,12 +208,17 @@ async function finishLoad () {
   await delay(501)
   loadingbk.remove()
 
-  chrome.storage.local.get(['justupdated'], function (result) {
-    if (result.justupdated) {
+  const result = browser.storage.local.get(['justupdated'])
+  function open (item) {
+    if (item.justupdated) {
       WhatsNewOpen = true
       OpenWhatsNewPopup()
     }
-  })
+  }
+  function error (error) {
+    console.log(`Error: ${error}`)
+  }
+  result.then(open, error)
 }
 
 async function DeleteWhatsNew () {
@@ -315,26 +229,6 @@ async function DeleteWhatsNew () {
   await delay(500)
   bkelement.remove()
   popup.remove()
-}
-
-function CreateBackground () {
-  // Creating and inserting 3 divs containing the background applied to the pages
-  const bklocation = document.getElementById('container')
-  const menu = document.getElementById('menu')
-  const bk = document.createElement('div')
-  bk.classList.add('bg')
-
-  bklocation.insertBefore(bk, menu)
-
-  const bk2 = document.createElement('div')
-  bk2.classList.add('bg')
-  bk2.classList.add('bg2')
-  bklocation.insertBefore(bk2, menu)
-
-  const bk3 = document.createElement('div')
-  bk3.classList.add('bg')
-  bk3.classList.add('bg3')
-  bklocation.insertBefore(bk3, menu)
 }
 
 function waitForElm (selector) {
@@ -366,20 +260,8 @@ async function RunColourCheck (element) {
   }
 }
 
-function GetiFrameCSSElement () {
-  const cssFile = chrome.runtime.getURL('inject/iframe.css')
-  const fileref = document.createElement('link')
-  fileref.setAttribute('rel', 'stylesheet')
-  fileref.setAttribute('type', 'text/css')
-  fileref.setAttribute('href', cssFile)
-
-  return fileref
-}
-
-// This function just grabs the CSS file for the iFrames of notices
-// Duplicate of the GetiFrameCSSElement function, look above
-function GetNoticeiFrameCSSElement () {
-  const cssFile = chrome.runtime.getURL('inject/noticeiframe.css')
+function GetCSSElement (file) {
+  const cssFile = browser.runtime.getURL(file)
   const fileref = document.createElement('link')
   fileref.setAttribute('rel', 'stylesheet')
   fileref.setAttribute('type', 'text/css')
@@ -390,14 +272,15 @@ function GetNoticeiFrameCSSElement () {
 
 function CheckiFrameItems () {
   // Injecting CSS File to the webpage to overwrite iFrame default CSS
-  const fileref = GetiFrameCSSElement()
+  const fileref = GetCSSElement('inject/iframe.css')
 
   const observer = new MutationObserver(function (mutationsList) {
     mutationsList.forEach(function (mutation) {
       mutation.addedNodes.forEach(function (addedNode) {
         if (addedNode.tagName === 'IFRAME') {
-          chrome.storage.local.get(['DarkMode'], function (result) {
-            const DarkModeResult = result.DarkMode
+          const result = browser.storage.local.get(['DarkMode'])
+          function darkModeEnable (item) {
+            const DarkModeResult = item.DarkMode
             if (DarkModeResult) {
               RunColourCheck(addedNode)
               if (addedNode.contentDocument.documentElement.childNodes[1].style.color !== 'white') {
@@ -427,7 +310,11 @@ function CheckiFrameItems () {
                 }
               })
             }
-          })
+          }
+          function onError (error) {
+            console.log(`Error: ${error}`)
+          }
+          result.then(darkModeEnable, onError)
         }
       })
     })
@@ -467,15 +354,17 @@ function LoadPageElements () {
   AddBetterSEQTAElements(true)
   const sublink = window.location.href.split('/')[4]
   switch (sublink) {
-    case 'news':
+    case 'news' : {
       console.log('[BetterSEQTA] Started Init')
-      chrome.storage.local.get(null, function (result) {
-        if (result.onoff) {
+      const result = browser.storage.local.get()
+      function loadElements (item) {
+        if (item.onoff) {
           SendNewsPage()
 
           // Sends similar HTTP Post Request for the notices
-          chrome.storage.local.get(null, function (result) {
-            if (result.notificationcollector) {
+          const result = browser.storage.local.get()
+          function notificationCollector (item) {
+            if (item.notificationcollector) {
               const xhr3 = new XMLHttpRequest()
               xhr3.open(
                 'POST',
@@ -506,12 +395,17 @@ function LoadPageElements () {
                 })
               )
             }
-          })
+          }
+          function onError (error) { console.log(`Error: ${error}`) }
+          result.then(notificationCollector, onError)
 
           finishLoad()
         }
-      })
+      }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(loadElements, onError)
       break
+    }
 
     case 'home':
       window.location.replace(`${location.origin}/#?page=/home`)
@@ -521,12 +415,13 @@ function LoadPageElements () {
       window.location.replace(`${location.origin}/#?page=/home`)
       LoadInit()
       break
-    default:
+    default: {
       finishLoad()
 
       // Sends similar HTTP Post Request for the notices
-      chrome.storage.local.get(null, function (result) {
-        if (result.notificationcollector) {
+      const result = browser.storage.local.get()
+      function notices (item) {
+        if (item.notificationcollector) {
           const xhr3 = new XMLHttpRequest()
           xhr3.open(
             'POST',
@@ -557,8 +452,11 @@ function LoadPageElements () {
             })
           )
         }
-      })
+      }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(notices, onError)
       break
+    }
   }
 
   const observer = new MutationObserver(function (mutationsList) {
@@ -586,8 +484,9 @@ function CheckNoticeTextColour (notice) {
   const observer = new MutationObserver(function (mutationsList) {
     mutationsList.forEach(function (mutation) {
       mutation.addedNodes.forEach(function (addedNode) {
-        chrome.storage.local.get(['DarkMode'], function (result) {
-          const Darkmode = result.DarkMode
+        const result = browser.storage.local.get(['DarkMode'])
+        function changeToDark (item) {
+          const Darkmode = item.DarkMode
           if (addedNode.classList.contains('notice')) {
             const hex = addedNode.style.cssText.split(' ')[1]
             const threshold = GetThresholdofHex(hex)
@@ -595,7 +494,9 @@ function CheckNoticeTextColour (notice) {
               addedNode.style.cssText = '--color: undefined;'
             }
           }
-        })
+        }
+        function onError (error) { console.log(`Error: ${error}`) }
+        result.then(changeToDark, onError)
       })
     })
   })
@@ -629,6 +530,7 @@ function tryLoad () {
     function () {
       CheckiFrameItems()
       addIFrameCSSToNotices()
+      documentTextColor()
     },
     true
   )
@@ -662,9 +564,10 @@ function ChangeMenuItemPositions (storage) {
 }
 
 async function ObserveMenuItemPosition () {
-  chrome.storage.local.get(null, function (result) {
-    const menuorder = result.menuorder
-    if (menuorder && result.onoff) {
+  const result = browser.storage.local.get()
+  function changeMenuOrder (item) {
+    const menuorder = item.menuorder
+    if (menuorder && item.onoff) {
       const observer = new MutationObserver(function (mutationsList) {
         mutationsList.forEach(function (mutation) {
           mutation.addedNodes.forEach(function (addedNode) {
@@ -683,7 +586,9 @@ async function ObserveMenuItemPosition () {
         childList: true
       })
     }
-  })
+  }
+  function onError (error) { console.log(`Error: ${error}`) }
+  result.then(changeMenuOrder, onError)
 }
 
 function AppendElementsToDisabledPage () {
@@ -732,15 +637,15 @@ function ColorLuminance (hex, lum) {
   return rgb
 }
 
-chrome.storage.onChanged.addListener(function (changes) {
+browser.storage.onChanged.addListener(function (changes) {
   if (changes.selectedColor) {
     const rbg = GetThresholdofHex(changes.selectedColor.newValue)
     if (rbg > 210) {
       document.documentElement.style.setProperty('--text-color', 'black')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${chrome.runtime.getURL('icons/betterseqta-dark-full.png')})`)
+      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-dark-full.png')})`)
     } else {
       document.documentElement.style.setProperty('--text-color', 'white')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${chrome.runtime.getURL('icons/betterseqta-light-full.png')})`)
+      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-light-full.png')})`)
     }
 
     document.documentElement.style.setProperty('--better-main', changes.selectedColor.newValue)
@@ -781,12 +686,12 @@ async function CheckLoadOnPeriods () {
 function RunFunctionOnTrue (storedSetting) {
   // If the option is 'on', open BetterSEQTA
   if (typeof storedSetting.onoff === 'undefined') {
-    chrome.runtime.sendMessage({ type: 'setDefaultStorage' })
+    browser.runtime.sendMessage({ type: 'setDefaultStorage' })
   }
   if (storedSetting.onoff) {
     console.log('[BetterSEQTA] Enabled')
     // Injecting CSS File to the webpage to overwrite SEQTA's default CSS
-    const cssFile = chrome.runtime.getURL('inject/injected.css')
+    const cssFile = browser.runtime.getURL('inject/injected.css')
     const fileref = document.createElement('link')
     fileref.setAttribute('rel', 'stylesheet')
     fileref.setAttribute('type', 'text/css')
@@ -807,15 +712,15 @@ function RunFunctionOnTrue (storedSetting) {
       document.documentElement.style.setProperty('--text-primary', 'black')
     }
 
-    document.querySelector('link[rel*="icon"]').href = chrome.runtime.getURL('icons/icon-48.png')
+    document.querySelector('link[rel*="icon"]').href = browser.runtime.getURL('icons/icon-48.png')
 
     const rbg = GetThresholdofHex(storedSetting.selectedColor)
     if (rbg > 210) {
       document.documentElement.style.setProperty('--text-color', 'black')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${chrome.runtime.getURL('icons/betterseqta-dark-full.png')})`)
+      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-dark-full.png')})`)
     } else {
       document.documentElement.style.setProperty('--text-color', 'white')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${chrome.runtime.getURL('icons/betterseqta-light-full.png')})`)
+      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-light-full.png')})`)
     }
 
     document.documentElement.style.setProperty('--better-main', storedSetting.selectedColor)
@@ -878,14 +783,17 @@ document.addEventListener(
       console.log('[BetterSEQTA] Verified SEQTA Page')
 
       const link = document.createElement('link')
-      link.href = chrome.runtime.getURL('inject/documentload.css')
+      link.href = browser.runtime.getURL('inject/documentload.css')
       link.type = 'text/css'
       link.rel = 'stylesheet'
       document.getElementsByTagName('html')[0].appendChild(link)
 
-      chrome.storage.local.get(null, function (items) {
+      const result = browser.storage.local.get()
+      function runFunction (items) {
         RunFunctionOnTrue(items)
-      })
+      }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(runFunction, onError)
     }
     if (
       !document.childNodes[1].textContent?.includes('SEQTA') &&
@@ -899,11 +807,13 @@ document.addEventListener(
 
 function RunExtensionSettingsJS () {
   const whatsnewsettings = document.getElementById('whatsnewsettings')
-  whatsnewsettings.addEventListener('click', function () {
-    if (!WhatsNewOpen) {
-      WhatsNewOpen = true
-      OpenWhatsNewPopup()
-    }
+  window.addEventListener('DOMContentLoaded', (event) => {
+    whatsnewsettings.addEventListener('click', function () {
+      if (!WhatsNewOpen) {
+        WhatsNewOpen = true
+        OpenWhatsNewPopup()
+      }
+    })
   })
 
   const onoffselection = document.querySelector('#onoff')
@@ -914,6 +824,7 @@ function RunExtensionSettingsJS () {
   const miscsection = document.querySelector('#miscsection')
   const colorpicker = document.querySelector('#colorpicker')
   const animatedbk = document.querySelector('#animatedbk')
+  const bkslider = document.querySelector('#bksliderinput')
   const customshortcutbutton = document.getElementsByClassName('custom-shortcuts-button')[0]
   const customshortcutdiv = document.getElementsByClassName('custom-shortcuts-container')[0]
   const customshortcutsubmit = document.getElementsByClassName('custom-shortcuts-submit')[0]
@@ -943,7 +854,7 @@ function RunExtensionSettingsJS () {
   const github = document.getElementById('github')
 
   function openGithub () {
-    chrome.runtime.sendMessage({ type: 'githubTab' })
+    browser.runtime.sendMessage({ type: 'githubTab' })
   }
 
   function resetActive () {
@@ -956,32 +867,36 @@ function RunExtensionSettingsJS () {
   }
 
   function FindSEQTATab () {
-    chrome.runtime.sendMessage({ type: 'reloadTabs' })
+    browser.runtime.sendMessage({ type: 'reloadTabs' })
   }
   /*
-  Store the currently selected settings using chrome.storage.local.
+  Store the currently selected settings using browser.storage.local.
   */
   function storeSettings () {
-    chrome.storage.local.set({ onoff: onoffselection.checked }, function () {
+    browser.storage.local.set({ onoff: onoffselection.checked }, function () {
       FindSEQTATab()
     })
   }
 
   function storeNotificationSettings () {
-    chrome.storage.local.set(
+    browser.storage.local.set(
       { notificationcollector: notificationcollector.checked })
-    chrome.storage.local.set({ lessonalert: lessonalert.checked })
-    chrome.storage.local.set({ animatedbk: animatedbk.checked })
+    browser.storage.local.set({ lessonalert: lessonalert.checked })
+    browser.storage.local.set({ animatedbk: animatedbk.checked })
+    browser.storage.local.set({ bksliderinput: bkslider.value })
   }
 
   function StoreAllSettings () {
-    chrome.storage.local.get(['shortcuts'], function (result) {
-      const shortcuts = Object.values(result)[0]
+    const result = browser.storage.local.get(['shortcuts'])
+    function shortcutSet (item) {
+      const shortcuts = Object.values(item)[0]
       for (let i = 0; i < shortcutbuttons.length; i++) {
         shortcuts[i].enabled = shortcutbuttons[i].checked
       }
-      chrome.storage.local.set({ shortcuts })
-    })
+      browser.storage.local.set({ shortcuts })
+    }
+    function onError (error) { console.log(`Error: ${error}`) }
+    result.then(shortcutSet, onError)
 
     FindSEQTATab()
   }
@@ -991,23 +906,30 @@ function RunExtensionSettingsJS () {
   */
   function updateUI (restoredSettings) {
     if (typeof restoredSettings.onoff === 'undefined') {
-      chrome.runtime.sendMessage({ type: 'setDefaultStorage' })
+      browser.runtime.sendMessage({ type: 'setDefaultStorage' })
 
-      chrome.storage.local.get(null, function (result) {
-        updateUI(result)
-      })
+      const result = browser.storage.local.get()
+      function update (item) {
+        updateUI(item)
+      }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(update, onError)
     } else {
       onoffselection.checked = restoredSettings.onoff
       notificationcollector.checked = restoredSettings.notificationcollector
       lessonalert.checked = restoredSettings.lessonalert
       animatedbk.checked = restoredSettings.animatedbk
-      chrome.storage.local.get(['shortcuts'], function (result) {
-        const shortcuts = Object.values(result)[0]
+      bkslider.value = restoredSettings.bksliderinput
+      const result = browser.storage.local.get(['shortcuts'])
+      function storageShortcut (item) {
+        const shortcuts = Object.values(item)[0]
         for (let i = 0; i < shortcutbuttons.length; i++) {
           shortcutbuttons[i].checked = shortcuts[i].enabled
         }
-        chrome.storage.local.set({ shortcuts })
-      })
+        browser.storage.local.set({ shortcuts })
+      }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(storageShortcut, onError)
     }
   }
 
@@ -1032,29 +954,35 @@ function RunExtensionSettingsJS () {
   }
 
   function AddCustomShortcuts () {
-    chrome.storage.local.get(['customshortcuts'], function (result) {
-      const customshortcuts = Object.values(result)[0]
+    const result = browser.storage.local.get(['customshortcuts'])
+    function addShortcut (item) {
+      const customshortcuts = Object.values(item)[0]
       for (let i = 0; i < customshortcuts.length; i++) {
         const element = customshortcuts[i]
         CreateShortcutDiv(
           element.name
         )
       }
-    })
+    }
+    function onError (error) { console.log(`Error: ${error}`) }
+    result.then(addShortcut, onError)
   }
 
   function DeleteCustomShortcut (name) {
     const item = document.querySelector(`[data-customshortcut="${name}"]`)
     item.remove()
-    chrome.storage.local.get(['customshortcuts'], function (result) {
-      const customshortcuts = Object.values(result)[0]
+    const result = browser.storage.local.get(['customshortcuts'])
+    function setCustomShortcut (item) {
+      const customshortcuts = Object.values(item)[0]
       for (let i = 0; i < customshortcuts.length; i++) {
         if (customshortcuts[i].name === name) {
           customshortcuts.splice(i, 1)
         }
       }
-      chrome.storage.local.set({ customshortcuts })
-    })
+      browser.storage.local.set({ customshortcuts })
+    }
+    function onError (error) { console.log(`Error: ${error}`) }
+    result.then(setCustomShortcut, onError)
   }
 
   function CustomShortcutMenu () {
@@ -1078,48 +1006,76 @@ function RunExtensionSettingsJS () {
       shortcuturl = 'https://' + shortcuturl
     }
 
-    chrome.storage.local.get(['customshortcuts'], function (result) {
-      const customshortcuts = Object.values(result)[0]
+    const result = browser.storage.local.get(['customshortcuts'])
+    function shortcutSet (item) {
+      const customshortcuts = Object.values(item)[0]
       customshortcuts.push({ name: shortcutname, url: shortcuturl, icon: (shortcutname[0]).toUpperCase() })
-      chrome.storage.local.set({ customshortcuts })
-    })
+      browser.storage.local.set({ customshortcuts })
+    }
+    function onError (error) { console.log(`Error: ${error}`) }
+    result.then(shortcutSet, onError)
 
     CreateShortcutDiv(
       shortcutname
     )
     document.getElementsByClassName('shortcut-container')[0].style.display = 'block'
   }
-  chrome.storage.local.get(null, function (result) {
-    document.getElementsByClassName('clr-field')[0].style.color = result.selectedColor
-    colorpicker.value = result.selectedColor
-    updateUI(result)
+  const result = browser.storage.local.get()
+  function colorUpdate (item) {
+    document.getElementsByClassName('clr-field')[0].style.color = item.selectedColor
+    colorpicker.value = item.selectedColor
+    updateUI(item)
+  }
+  function onError (error) { console.log(`Error: ${error}`) }
+  result.then(colorUpdate, onError)
+
+  window.addEventListener('DOMContentLoaded', (event) => {
+    github.addEventListener('click', openGithub)
+    aboutsection.addEventListener('click', () => { resetActive(); aboutsection.classList.add('activenav'); menupage.classList.remove('hiddenmenu') })
+
+    shortcutsection.addEventListener('click', () => { resetActive(); shortcutsection.classList.add('activenav'); shortcutpage.classList.remove('hiddenmenu') })
+
+    miscsection.addEventListener('click', () => { resetActive(); miscsection.classList.add('activenav'); miscpage.classList.remove('hiddenmenu') })
+
+    customshortcutbutton.addEventListener('click', () => { CustomShortcutMenu() })
+    customshortcutsubmit.addEventListener('click', () => { if (validName && validURL) { CreateCustomShortcut(); CustomShortcutMenu() } })
   })
-
-  github.addEventListener('click', openGithub)
-  aboutsection.addEventListener('click', () => { resetActive(); aboutsection.classList.add('activenav'); menupage.classList.remove('hiddenmenu') })
-
-  shortcutsection.addEventListener('click', () => { resetActive(); shortcutsection.classList.add('activenav'); shortcutpage.classList.remove('hiddenmenu') })
-
-  miscsection.addEventListener('click', () => { resetActive(); miscsection.classList.add('activenav'); miscpage.classList.remove('hiddenmenu') })
-
-  customshortcutbutton.addEventListener('click', () => { CustomShortcutMenu() })
-  customshortcutsubmit.addEventListener('click', () => { if (validName && validURL) { CreateCustomShortcut(); CustomShortcutMenu() } })
-
   let sameName = false
-  customshortcutinputname.addEventListener('input', function () {
-    sameName = false
-    chrome.storage.local.get(['customshortcuts'], function (result) {
-      const customshortcuts = Object.values(result)[0]
-      for (let i = 0; i < customshortcuts.length; i++) {
-        if (customshortcuts[i].name === customshortcutinputname.value) {
-          sameName = true
+  window.addEventListener('DOMContentLoaded', (event) => {
+    customshortcutinputname.addEventListener('input', function () {
+      sameName = false
+      const result = browser.storage.local.get(['customshortcuts'])
+      function shortcutSubmit (item) {
+        const customshortcuts = Object.values(item)[0]
+        for (let i = 0; i < customshortcuts.length; i++) {
+          if (customshortcuts[i].name === customshortcutinputname.value) {
+            sameName = true
+          }
+        }
+
+        if (customshortcutinputname.value.length > 0 && customshortcutinputname.value.length < 22 && !sameName) {
+          validName = true
+        } else {
+          validName = false
+        }
+
+        if (validName && validURL) {
+          customshortcutsubmit.classList.add('customshortcut-submit-valid')
+        } else {
+          customshortcutsubmit.classList.remove('customshortcut-submit-valid')
         }
       }
+      function onError (error) { console.log(`Error: ${error}`) }
+      result.then(shortcutSubmit, onError)
+    })
+  })
 
-      if (customshortcutinputname.value.length > 0 && customshortcutinputname.value.length < 22 && !sameName) {
-        validName = true
+  window.addEventListener('DOMContentLoaded', (event) => {
+    customshortcutinputurl.addEventListener('input', function () {
+      if (customshortcutinputurl.value.length > 0 && customshortcutinputurl.value.includes('.')) {
+        validURL = true
       } else {
-        validName = false
+        validURL = false
       }
 
       if (validName && validURL) {
@@ -1130,322 +1086,67 @@ function RunExtensionSettingsJS () {
     })
   })
 
-  customshortcutinputurl.addEventListener('input', function () {
-    if (customshortcutinputurl.value.length > 0 && customshortcutinputurl.value.includes('.')) {
-      validURL = true
-    } else {
-      validURL = false
-    }
-
-    if (validName && validURL) {
-      customshortcutsubmit.classList.add('customshortcut-submit-valid')
-    } else {
-      customshortcutsubmit.classList.remove('customshortcut-submit-valid')
-    }
-  })
-
   AddCustomShortcuts()
 
-  onoffselection.addEventListener('change', storeSettings)
-  notificationcollector.addEventListener(
-    'change',
-    storeNotificationSettings
-  )
-  lessonalert.addEventListener('change', storeNotificationSettings)
+  window.addEventListener('DOMContentLoaded', (event) => {
+    onoffselection.addEventListener('change', storeSettings)
+    notificationcollector.addEventListener(
+      'change',
+      storeNotificationSettings
+    )
+    lessonalert.addEventListener('change', storeNotificationSettings)
 
-  animatedbk.addEventListener('change', storeNotificationSettings)
+    animatedbk.addEventListener('change', storeNotificationSettings)
 
+    bkslider.addEventListener('change', storeNotificationSettings)
+  })
   for (let i = 0; i < allinputs.length; i++) {
     if (allinputs[i].id !== 'colorpicker' && allinputs[i].id !== 'shortcuturl' && allinputs[i].id !== 'shortcutname') {
       allinputs[i].addEventListener('change', () => { applybutton.style.left = '4px' })
     }
   }
 
-  applybutton.addEventListener('click', () => { StoreAllSettings(); applybutton.style.left = '-150px' })
+  window.addEventListener('DOMContentLoaded', (event) => {
+    applybutton.addEventListener('click', () => { StoreAllSettings(); applybutton.style.left = '-150px' })
 
-  colorpicker.addEventListener('input', function () {
-    const colorPreview = document.querySelector('#clr-color-preview')
-    if (colorPreview.style.color) {
-      let hex = colorPreview.style.color.split('(')[1].split(')')[0]
-      hex = hex.split(',')
-      let b = hex.map(function (x) { // For each array element
-        x = parseInt(x).toString(16) // Convert to a base16 string
-        return (x.length === 1) ? '0' + x : x // Add zero if we get only one character
-      })
-      b = '#' + b.join('')
+    colorpicker.addEventListener('input', function () {
+      const colorPreview = document.querySelector('#clr-color-preview')
+      if (colorPreview.style.color) {
+        let hex = colorPreview.style.color.split('(')[1].split(')')[0]
+        hex = hex.split(',')
+        let b = hex.map(function (x) { // For each array element
+          x = parseInt(x).toString(16) // Convert to a base16 string
+          return (x.length === 1) ? '0' + x : x // Add zero if we get only one character
+        })
+        b = '#' + b.join('')
 
-      chrome.storage.local.set({ selectedColor: b })
-    }
+        browser.storage.local.set({ selectedColor: b })
+      }
+    })
   })
 }
 
 function CallExtensionSettings () {
-  // Injecting CSS File to the webpage to overwrite iFrame default CSS
-  let cssFile = chrome.runtime.getURL('popup/info.css')
   let fileref = document.createElement('link')
+  const cssFile = browser.runtime.getURL('popup/settings.css')
   fileref.setAttribute('rel', 'stylesheet')
   fileref.setAttribute('type', 'text/css')
   fileref.setAttribute('href', cssFile)
   document.head.append(fileref)
 
-  const jsFile = chrome.runtime.getURL('popup/coloris.js')
-  fileref = document.createElement('script')
-  fileref.setAttribute('src', jsFile)
-  document.head.append(fileref)
+  fileref = document.createElement('div')
+  fileref.setAttribute('class', 'seqta-settings hidden')
+  fileref.setAttribute('id', 'ExtensionPopup')
 
-  cssFile = chrome.runtime.getURL('popup/coloris.css')
-  fileref = document.createElement('link')
-  fileref.setAttribute('rel', 'stylesheet')
-  fileref.setAttribute('type', 'text/css')
-  fileref.setAttribute('href', cssFile)
-  document.head.append(fileref)
-  const Settings = stringToHTML(`<div class="outside-container hidden" id="ExtensionPopup"><div class="logo-container"><img src=${chrome.runtime.getURL('icons/betterseqta-light-full.png')}></div>
-  <div class="main-page" id="mainpage">
-      <div class="topmenu">
-        <div class="navitem activenav" id="miscsection">Settings</div>
-        <div class="navitem" id="shortcutsection">Shortcuts</div>
-        <div class="navitem" id="aboutsection">About</div>
-      </div>
-    </div>
-  
+  const popup = document.createElement('iframe')
+  const popupFile = browser.runtime.getURL('popup/info.html')
+  popup.setAttribute('src', popupFile)
+  popup.setAttribute('width', '350px')
+  popup.setAttribute('height', '535px')
+  popup.setAttribute('style', 'border: none;')
 
-  <div class="menu-page hiddenmenu" id="menupage">
-    <div class="selector-container" style="margin-bottom: 0;">
-      <div class="menu-item-selection">
-          <div class="aboutcontainer">
-          <div>
-            <h1 class="addonitem">About</h1>
-            <p class="item subitem">Created and developed and maintained by Nulkem</p>
-            <p class="item subitem">BetterSEQTA was created as my first Javascript project, made for students who use SEQTA Learn published to the Firefox Addon page and Chrome Web Store.</p>
-          </div>
-        </div>
-
-        <div class="aboutcontainer">
-          <div>
-            <a class="aboutlinks" href="https://chrome.google.com/webstore/detail/betterseqta/boikofabjaholheekefimfojfncpjfib" target="_blank">
-              <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M12,20L15.46,14H15.45C15.79,13.4 16,12.73 16,12C16,10.8 15.46,9.73 14.62,9H19.41C19.79,9.93 20,10.94 20,12A8,8 0 0,1 12,20M4,12C4,10.54 4.39,9.18 5.07,8L8.54,14H8.55C9.24,15.19 10.5,16 12,16C12.45,16 12.88,15.91 13.29,15.77L10.89,19.91C7,19.37 4,16.04 4,12M15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9A3,3 0 0,1 15,12M12,4C14.96,4 17.54,5.61 18.92,8H12C10.06,8 8.45,9.38 8.08,11.21L5.7,7.08C7.16,5.21 9.44,4 12,4M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
-            </svg>
-              Chrome Webstore
-            </a>
-            <a class="aboutlinks" href="https://addons.mozilla.org/en-US/firefox/addon/betterseqta/" target="_blank">
-              <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M9.27 7.94C9.27 7.94 9.27 7.94 9.27 7.94M6.85 6.74C6.86 6.74 6.86 6.74 6.85 6.74M21.28 8.6C20.85 7.55 19.96 6.42 19.27 6.06C19.83 7.17 20.16 8.28 20.29 9.1L20.29 9.12C19.16 6.3 17.24 5.16 15.67 2.68C15.59 2.56 15.5 2.43 15.43 2.3C15.39 2.23 15.36 2.16 15.32 2.09C15.26 1.96 15.2 1.83 15.17 1.69C15.17 1.68 15.16 1.67 15.15 1.67H15.13L15.12 1.67L15.12 1.67L15.12 1.67C12.9 2.97 11.97 5.26 11.74 6.71C11.05 6.75 10.37 6.92 9.75 7.22C9.63 7.27 9.58 7.41 9.62 7.53C9.67 7.67 9.83 7.74 9.96 7.68C10.5 7.42 11.1 7.27 11.7 7.23L11.75 7.23C11.83 7.22 11.92 7.22 12 7.22C12.5 7.21 12.97 7.28 13.44 7.42L13.5 7.44C13.6 7.46 13.67 7.5 13.75 7.5C13.8 7.54 13.86 7.56 13.91 7.58L14.05 7.64C14.12 7.67 14.19 7.7 14.25 7.73C14.28 7.75 14.31 7.76 14.34 7.78C14.41 7.82 14.5 7.85 14.54 7.89C14.58 7.91 14.62 7.94 14.66 7.96C15.39 8.41 16 9.03 16.41 9.77C15.88 9.4 14.92 9.03 14 9.19C17.6 11 16.63 17.19 11.64 16.95C11.2 16.94 10.76 16.85 10.34 16.7C10.24 16.67 10.14 16.63 10.05 16.58C10 16.56 9.93 16.53 9.88 16.5C8.65 15.87 7.64 14.68 7.5 13.23C7.5 13.23 8 11.5 10.83 11.5C11.14 11.5 12 10.64 12.03 10.4C12.03 10.31 10.29 9.62 9.61 8.95C9.24 8.59 9.07 8.42 8.92 8.29C8.84 8.22 8.75 8.16 8.66 8.1C8.43 7.3 8.42 6.45 8.63 5.65C7.6 6.12 6.8 6.86 6.22 7.5H6.22C5.82 7 5.85 5.35 5.87 5C5.86 5 5.57 5.16 5.54 5.18C5.19 5.43 4.86 5.71 4.56 6C4.21 6.37 3.9 6.74 3.62 7.14C3 8.05 2.5 9.09 2.28 10.18C2.28 10.19 2.18 10.59 2.11 11.1L2.08 11.33C2.06 11.5 2.04 11.65 2 11.91L2 11.94L2 12.27L2 12.32C2 17.85 6.5 22.33 12 22.33C16.97 22.33 21.08 18.74 21.88 14C21.9 13.89 21.91 13.76 21.93 13.63C22.13 11.91 21.91 10.11 21.28 8.6Z" />
-            </svg>
-              Firefox Add-ons
-            </a>
-
-            <a class="aboutlinks" href="https://betterseqta.com" target="_blank">
-              <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83C7.22,12.88 7.22,9.71 9.17,7.76V7.76L12.71,4.22C14.66,2.27 17.83,2.27 19.78,4.22C21.73,6.17 21.73,9.34 19.78,11.29L18.29,12.78C18.3,11.96 18.17,11.14 17.89,10.36L18.36,9.88C19.54,8.71 19.54,6.81 18.36,5.64C17.19,4.46 15.29,4.46 14.12,5.64L10.59,9.17C9.41,10.34 9.41,12.24 10.59,13.41M13.41,9.17C13.8,8.78 14.44,8.78 14.83,9.17C16.78,11.12 16.78,14.29 14.83,16.24V16.24L11.29,19.78C9.34,21.73 6.17,21.73 4.22,19.78C2.27,17.83 2.27,14.66 4.22,12.71L5.71,11.22C5.7,12.04 5.83,12.86 6.11,13.65L5.64,14.12C4.46,15.29 4.46,17.19 5.64,18.36C6.81,19.54 8.71,19.54 9.88,18.36L13.41,14.83C14.59,13.66 14.59,11.76 13.41,10.59C13,10.2 13,9.56 13.41,9.17Z" />
-            </svg>
-              betterseqta.com
-            </a>
-
-          </div>
-        </div>
-        <div class="aboutcontainer">
-          <div>
-            <h1 class="addonitem" style="margin-top: 20px; margin-bottom: 5px;">Support Me</h1>
-            <a href='https://ko-fi.com/O4O5AOFX9' target='_blank' style="background: none !important; margin: 0; padding:0;"><img height='36' style='border:0px;height:36px;' src='${chrome.runtime.getURL('/popup/kofi3.png')}' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-          </div>
-        </div>
-
-        <div class="aboutcontainer" style="color: rgb(155, 155, 155); font-size: 14px; margin-top: 7px;">
-        <p>Contact: nulkem@protonmail.com</p>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="menu-page hiddenmenu" id="shortcutpage">
-    <div class="selector-container" style="margin-bottom: 0; max-height: 17em; overflow-y:hidden;">
-      <div>
-        <div class="custom-shortcuts-button custom-shortcuts-buttons">Create Custom Shortcut</div>
-        <div class="custom-shortcuts-container">
-          <label for="shortcutname" class="custom-shortcuts-label">Shortcut Name:</label>
-          <input type="text" id="shortcutname" name="shortcutname" class="custom-shortcuts-field" placeholder="e.g. Google" maxlength="20">
-          <label for="shortcuturl" class="custom-shortcuts-label">URL:</label>
-          <input type="text" id="shortcuturl" name="shortcuturl" class="custom-shortcuts-field" placeholder="e.g. https://www.google.com">
-          <div class="custom-shortcuts-submit custom-shortcuts-buttons">Create</div>
-        </div>
-      </div>
-      <div class="menu-item-selection menushortcut">
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">YouTube</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="youtube">
-            <label for="youtube" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Outlook</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="outlook">
-            <label for="outlook" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Office</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="office">
-            <label for="office" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Spotify</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="spotify">
-            <label for="spotify" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Google</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="google">
-            <label for="google" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">DuckDuckGo</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox"
-              id="duckduckgo">
-              <label for="duckduckgo" class="onoffswitch-label"></label>
-            </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Cool Math Games</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox"
-              id="coolmathgames">
-              <label for="coolmathgames" class="onoffswitch-label"></label>
-            </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">SACE</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="sace">
-            <label for="sace" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Google Scholar</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox"
-              id="googlescholar">
-              <label for="googlescholar" class="onoffswitch-label"></label>
-            </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Gmail</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="gmail">
-            <label for="gmail" class="onoffswitch-label"></label>
-          </div>
-        </div>
-        <div class="item-container menushortcuts">
-          <div class="text-container">
-            <h1 class="addonitem">Netflix</h1>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification shortcutitem" type="checkbox" id="netflix">
-            <label for="netflix" class="onoffswitch-label"></label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="menu-page" id="miscpage">
-    <div class="selector-container" style="margin-bottom: 0;">
-      <div class="menu-item-selection">
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Notification Collector</h1>
-            <p class="item subitem">Uncaps the 9+ limit for notifications, showing the real number.</p>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="notification">
-          <label for="notification" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Lesson Alerts</h1>
-            <p class="item subitem">Sends a native browser notification ~5 minutes prior to lessons.</p>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="lessonalert">
-            <label for="lessonalert" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Animated Background</h1>
-            <p class="item subitem">Adds an animated background to BetterSEQTA. (May impact battery life)</p>
-          </div>
-          <div class="onoffswitch"><input class="onoffswitch-checkbox notification" type="checkbox" id="animatedbk">
-          <label for="animatedbk" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-        <div class="item-container">
-          <div class="text-container">
-            <h1 class="addonitem">Custom Theme Colour</h1>
-            <p class="item subitem">Customise the overall theme colour of SEQTA Learn.</p>
-          </div>
-          <div class="clr-field" style="justify-content: end; display: flex; margin: 5px;">
-            <button aria-labelledby="clr-open-label" style="width: 51px; right: 0px; border: 1px solid white;"></button>
-            <input type="text" id="colorpicker" class="coloris" style="width: 42px; border-radius: 3px;" />
-          </div>
-        </div>
-
-
-        <div class="item-container" style="height: 2em; margin-top: 0px;">
-          <div class="text-container">
-            <h1 class="addonitem">BetterSEQTA</h1>
-          </div>
-          <div class="onoffswitch" style="margin-bottom: 0px;"><input class="onoffswitch-checkbox notification" type="checkbox" id="onoff">
-            <label for="onoff" class="onoffswitch-label"></label>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
-
-
-  <div class="bottom-container">
-    <div class="applychanges" id="applychanges" style="height: 25px;">
-      <div style="margin-top:0px;">
-      <h5>Unsaved Changes</h5>
-      <h6>Click to apply.</h6>
-      </div>
-    </div>
-
-    <div></div>
-
-    <div style="position: absolute; bottom: 15px; right: 50px; color: rgb(177, 177, 177); display: flex; align-items:center;">
-    <p style="margin: 0; margin-right: 5px; color: white;">Created by Nulkem </p>
-    <p style="margin: 0; cursor:pointer; padding: 4px 5px; background: #ff5f5f; color:#1a1a1a;font-weight: 500; border-radius: 10px;" id="whatsnewsettings">What's new in v${chrome.runtime.getManifest().version}</p></div>
-    <img src=${chrome.runtime.getURL('/popup/github.svg')} alt="" id="github">
-  </div></div>`)
-  document.body.append(Settings.firstChild)
+  fileref.appendChild(popup)
+  document.body.append(fileref)
 
   const container = document.getElementById('container')
   const extensionsettings = document.getElementById('ExtensionPopup')
@@ -1510,7 +1211,7 @@ function dragDrop (e) {
       listorder.push(elm.dataset.key)
     }
 
-    chrome.storage.local.set({ menuorder: listorder })
+    browser.storage.local.set({ menuorder: listorder })
   }
   return false
 }
@@ -1537,27 +1238,28 @@ function cloneAttributes (target, source) {
 }
 
 function OpenMenuOptions () {
-  chrome.storage.local.get(null, function (result) {
+  const result = browser.storage.local.get()
+  function menu (item) {
     const container = document.getElementById('container')
     const menu = document.getElementById('menu')
 
-    if (result.defaultmenuorder.length === '0') {
+    if (item.defaultmenuorder.length === '0') {
       const childnodes = menu.firstChild.childNodes
       const newdefaultmenuorder = []
       for (let i = 0; i < childnodes.length; i++) {
         const element = childnodes[i]
         newdefaultmenuorder.push(element.dataset.key)
-        chrome.storage.local.set({ defaultmenuorder: newdefaultmenuorder })
+        browser.storage.local.set({ defaultmenuorder: newdefaultmenuorder })
       }
     }
     const childnodes = menu.firstChild.childNodes
-    if (result.defaultmenuorder.length !== childnodes.length) {
+    if (item.defaultmenuorder.length !== childnodes.length) {
       for (let i = 0; i < childnodes.length; i++) {
         const element = childnodes[i]
-        if (!result.defaultmenuorder.indexOf(element.dataset.key)) {
-          const newdefaultmenuorder = result.defaultmenuorder
+        if (!item.defaultmenuorder.indexOf(element.dataset.key)) {
+          const newdefaultmenuorder = item.defaultmenuorder
           newdefaultmenuorder.push(element.dataset.key)
-          chrome.storage.local.set({ defaultmenuorder: newdefaultmenuorder })
+          browser.storage.local.set({ defaultmenuorder: newdefaultmenuorder })
         }
       }
     }
@@ -1611,7 +1313,7 @@ function OpenMenuOptions () {
       }
     }
 
-    if (Object.keys(result.menuitems).length === 0) {
+    if (Object.keys(item.menuitems).length === 0) {
       const menubuttons = menu.firstChild.childNodes
       const menuItems = {}
       for (let i = 0; i < menubuttons.length; i++) {
@@ -1620,12 +1322,13 @@ function OpenMenuOptions () {
         element.toggle = true
         menuItems[id] = element
       }
-      chrome.storage.local.set({ menuitems: menuItems })
+      browser.storage.local.set({ menuitems: menuItems })
     }
 
     const menubuttons = document.getElementsByClassName('menuitem')
-    chrome.storage.local.get(['menuitems'], function (result) {
-      const menuItems = result.menuitems
+    const result = browser.storage.local.get(['menuitems'])
+    function menuButtons (item) {
+      const menuItems = item.menuitems
       const buttons = document.getElementsByClassName('menuitem')
       for (let i = 0; i < buttons.length; i++) {
         const id = buttons[i].id
@@ -1636,12 +1339,14 @@ function OpenMenuOptions () {
           buttons[i].checked = true
         }
       }
-    })
+    }
+    result.then(menuButtons, onError)
 
     ApplyDraggableFunctions()
 
     function StoreMenuSettings () {
-      chrome.storage.local.get(['menuitems'], function (result) {
+      const result = browser.storage.local.get(['menuitems'])
+      function setMenuItems (item) {
         const menuItems = {}
         const menubuttons = menu.firstChild.childNodes
         const button = document.getElementsByClassName('menuitem')
@@ -1652,8 +1357,9 @@ function OpenMenuOptions () {
 
           menuItems[id] = element
         }
-        chrome.storage.local.set({ menuitems: menuItems })
-      })
+        browser.storage.local.set({ menuitems: menuItems })
+      }
+      result.then(setMenuItems, onError)
     }
 
     function changeDisplayProperty (element) {
@@ -1703,9 +1409,10 @@ function OpenMenuOptions () {
     savebutton.addEventListener('click', closeAll)
 
     defaultbutton.addEventListener('click', function () {
-      chrome.storage.local.get(null, function (response) {
+      const result = browser.storage.local.get()
+      function storeMenu (response) {
         const options = response.defaultmenuorder
-        chrome.storage.local.set({ menuorder: options })
+        browser.storage.local.set({ menuorder: options })
         ChangeMenuItemPositions(options)
 
         for (let i = 0; i < menubuttons.length; i++) {
@@ -1714,9 +1421,11 @@ function OpenMenuOptions () {
           element.parentNode.parentNode.style.setProperty('display', 'flex', 'important')
         }
         StoreMenuSettings()
-      })
+      }
+      result.then(storeMenu, onError)
     })
-  })
+  }
+  result.then(menu, onError)
 }
 
 function ReplaceMenuSVG (element, svg) {
@@ -1737,7 +1446,7 @@ function AddBetterSEQTAElements (toggle) {
   if (code != null) {
     if (!code.innerHTML.includes('BetterSEQTA')) {
       UserInitalCode = code.innerText
-      code.innerText = `BetterSEQTA v${chrome.runtime.getManifest().version}`
+      code.innerText = `BetterSEQTA v${browser.runtime.getManifest().version}`
       code.setAttribute('data-hover', 'Click for user code')
       code.addEventListener('click', function () {
         const code = document.getElementsByClassName('code')[0]
@@ -1745,20 +1454,36 @@ function AddBetterSEQTAElements (toggle) {
           code.innerText = UserInitalCode
           code.setAttribute('data-hover', 'Click for BetterSEQTA version')
         } else {
-          code.innerText = `BetterSEQTA v${chrome.runtime.getManifest().version}`
+          code.innerText = `BetterSEQTA v${browser.runtime.getManifest().version}`
           code.setAttribute('data-hover', 'Click for user code')
         }
       })
       if (toggle) {
         // Creates Home menu button and appends it as the first child of the list
 
-        chrome.storage.local.get(['animatedbk'], function (result) {
-          if (result.animatedbk) {
+        const result = browser.storage.local.get(['animatedbk'])
+        const sliderVal = browser.storage.local.get(['bksliderinput'])
+        function animbkEnable (item) {
+          if (item.animatedbk) {
             CreateBackground()
           } else {
             document.getElementById('container').style.background = 'var(--background-secondary)'
           }
-        })
+        }
+
+        function bkValues (item) {
+          const bg = document.getElementsByClassName('bg')
+          for (const bgSingular of bg) {
+            const style = window.getComputedStyle(bgSingular)
+            const ogTiming = style.getPropertyValue('animation-duration')
+            const sliced = ogTiming.slice(0, -1)
+            bgSingular.style.animationDuration = `${(Number(sliced) / (item.bksliderinput / 100)).toString()}s`
+            const thing = window.getComputedStyle(bgSingular)
+            console.log(thing.getPropertyValue('animation-duration'))
+          }
+        }
+        result.then(animbkEnable, onError)
+        sliderVal.then(bkValues, onError)
 
         const titlebar = document.createElement('div')
         titlebar.classList.add('titlebar')
@@ -1869,9 +1594,6 @@ function AddBetterSEQTAElements (toggle) {
         })
       }
 
-      CallExtensionSettings()
-      RunExtensionSettingsJS()
-
       if (toggle) {
         // Creates settings and dashboard buttons next to alerts
         const SettingsButton = stringToHTML(
@@ -1880,8 +1602,9 @@ function AddBetterSEQTAElements (toggle) {
         const ContentDiv = document.getElementById('content')
         ContentDiv.append(SettingsButton.firstChild)
 
-        chrome.storage.local.get(['DarkMode'], function (result) {
-          const Darkmode = result.DarkMode
+        const result = browser.storage.local.get(['DarkMode'])
+        function darken (item) {
+          const Darkmode = item.DarkMode
           const tooltipstring = GetLightDarkModeString(Darkmode)
           const LightDarkModeButton = stringToHTML(`<button class="addedButton DarkLightButton tooltip" id="LightDarkModeButton"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" style="width: 100%; height: 100%; transform: translate3d(0px, 0px, 0px);" preserveAspectRatio="xMidYMid meet"></svg><div class="tooltiptext topmenutooltip" id="darklighttooliptext">${tooltipstring}</div></button>`)
           ContentDiv.append(LightDarkModeButton.firstChild)
@@ -1895,20 +1618,23 @@ function AddBetterSEQTAElements (toggle) {
           }
           const darklightText = document.getElementById('darklighttooliptext')
           LightDarkModeElement.addEventListener('click', function () {
-            chrome.storage.local.get(['DarkMode'], function (result) {
+            const result = browser.storage.local.get(['DarkMode'])
+            function actuallyDarkenEverything (item) {
               const alliframes = document.getElementsByTagName('iframe')
-              const fileref = GetiFrameCSSElement()
+              const fileref = GetCSSElement('inject/iframe.css')
 
-              if (!result.DarkMode) {
+              if (!item.DarkMode) {
                 document.documentElement.style.setProperty('--background-primary', '#232323')
                 document.documentElement.style.setProperty('--background-secondary', '#1a1a1a')
                 document.documentElement.style.setProperty('--text-primary', 'white')
                 LightDarkModeElement.firstChild.innerHTML = '<defs><clipPath id="__lottie_element_80"><rect width="24" height="24" x="0" y="0"></rect></clipPath></defs><g clip-path="url(#__lottie_element_80)"><g style="display: block;" transform="matrix(1,0,0,1,12,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,-4 C-2.2100000381469727,-4 -4,-2.2100000381469727 -4,0 C-4,2.2100000381469727 -2.2100000381469727,4 0,4 C2.2100000381469727,4 4,2.2100000381469727 4,0 C4,-2.2100000381469727 2.2100000381469727,-4 0,-4z"></path></g></g><g style="display: block;" transform="matrix(1,0,0,1,12,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,6 C-3.309999942779541,6 -6,3.309999942779541 -6,0 C-6,-3.309999942779541 -3.309999942779541,-6 0,-6 C3.309999942779541,-6 6,-3.309999942779541 6,0 C6,3.309999942779541 3.309999942779541,6 0,6z M8,-3.309999942779541 C8,-3.309999942779541 8,-8 8,-8 C8,-8 3.309999942779541,-8 3.309999942779541,-8 C3.309999942779541,-8 0,-11.3100004196167 0,-11.3100004196167 C0,-11.3100004196167 -3.309999942779541,-8 -3.309999942779541,-8 C-3.309999942779541,-8 -8,-8 -8,-8 C-8,-8 -8,-3.309999942779541 -8,-3.309999942779541 C-8,-3.309999942779541 -11.3100004196167,0 -11.3100004196167,0 C-11.3100004196167,0 -8,3.309999942779541 -8,3.309999942779541 C-8,3.309999942779541 -8,8 -8,8 C-8,8 -3.309999942779541,8 -3.309999942779541,8 C-3.309999942779541,8 0,11.3100004196167 0,11.3100004196167 C0,11.3100004196167 3.309999942779541,8 3.309999942779541,8 C3.309999942779541,8 8,8 8,8 C8,8 8,3.309999942779541 8,3.309999942779541 C8,3.309999942779541 11.3100004196167,0 11.3100004196167,0 C11.3100004196167,0 8,-3.309999942779541 8,-3.309999942779541z"></path></g></g></g>'
 
                 for (let i = 0; i < alliframes.length; i++) {
-                  const element = alliframes[i]
-                  element.contentDocument.documentElement.childNodes[1].style.color = 'white'
-                  element.contentDocument.documentElement.firstChild.appendChild(fileref)
+                  if (alliframes[i].src !== browser.runtime.getURL('popup/info.html')) {
+                    const element = alliframes[i]
+                    element.contentDocument.documentElement.childNodes[1].style.color = 'white'
+                    element.contentDocument.documentElement.firstChild.appendChild(fileref)
+                  }
                 }
               } else {
                 document.documentElement.style.setProperty('--background-primary', '#ffffff')
@@ -1917,17 +1643,21 @@ function AddBetterSEQTAElements (toggle) {
                 LightDarkModeElement.firstChild.innerHTML = '<defs><clipPath id="__lottie_element_263"><rect width="24" height="24" x="0" y="0"></rect></clipPath></defs><g clip-path="url(#__lottie_element_263)"><g style="display: block;" transform="matrix(1.5,0,0,1.5,7,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,-4 C-2.2100000381469727,-4 -1.2920000553131104,-2.2100000381469727 -1.2920000553131104,0 C-1.2920000553131104,2.2100000381469727 -2.2100000381469727,4 0,4 C2.2100000381469727,4 4,2.2100000381469727 4,0 C4,-2.2100000381469727 2.2100000381469727,-4 0,-4z"></path></g></g><g style="display: block;" transform="matrix(-1,0,0,-1,12,12)" opacity="1"><g opacity="1" transform="matrix(1,0,0,1,0,0)"><path fill-opacity="1" d=" M0,6 C-3.309999942779541,6 -6,3.309999942779541 -6,0 C-6,-3.309999942779541 -3.309999942779541,-6 0,-6 C3.309999942779541,-6 6,-3.309999942779541 6,0 C6,3.309999942779541 3.309999942779541,6 0,6z M8,-3.309999942779541 C8,-3.309999942779541 8,-8 8,-8 C8,-8 3.309999942779541,-8 3.309999942779541,-8 C3.309999942779541,-8 0,-11.3100004196167 0,-11.3100004196167 C0,-11.3100004196167 -3.309999942779541,-8 -3.309999942779541,-8 C-3.309999942779541,-8 -8,-8 -8,-8 C-8,-8 -8,-3.309999942779541 -8,-3.309999942779541 C-8,-3.309999942779541 -11.3100004196167,0 -11.3100004196167,0 C-11.3100004196167,0 -8,3.309999942779541 -8,3.309999942779541 C-8,3.309999942779541 -8,8 -8,8 C-8,8 -3.309999942779541,8 -3.309999942779541,8 C-3.309999942779541,8 0,11.3100004196167 0,11.3100004196167 C0,11.3100004196167 3.309999942779541,8 3.309999942779541,8 C3.309999942779541,8 8,8 8,8 C8,8 8,3.309999942779541 8,3.309999942779541 C8,3.309999942779541 11.3100004196167,0 11.3100004196167,0 C11.3100004196167,0 8,-3.309999942779541 8,-3.309999942779541z"></path></g></g></g>'
 
                 for (let i = 0; i < alliframes.length; i++) {
-                  const element = alliframes[i]
-                  element.contentDocument.documentElement.childNodes[1].style.color = 'black'
-                  element.contentDocument.documentElement.firstChild.lastChild.remove()
+                  if (alliframes[i].src !== browser.runtime.getURL('popup/info.html')) {
+                    const element = alliframes[i]
+                    element.contentDocument.documentElement.childNodes[1].style.color = 'black'
+                    element.contentDocument.documentElement.firstChild.lastChild.remove()
+                  }
                 }
               }
-              const tooltipstring = GetLightDarkModeString(!result.DarkMode)
+              const tooltipstring = GetLightDarkModeString(!item.DarkMode)
               darklightText.innerText = tooltipstring
-              chrome.storage.local.set({ DarkMode: !result.DarkMode })
-            })
+              browser.storage.local.set({ DarkMode: !item.DarkMode })
+            }
+            result.then(actuallyDarkenEverything, onError)
           })
-        })
+        }
+        result.then(darken, onError)
       } else {
         // Creates settings and dashboard buttons next to alerts
         const SettingsButton = stringToHTML(
@@ -1936,11 +1666,13 @@ function AddBetterSEQTAElements (toggle) {
         const ContentDiv = document.getElementById('content')
         ContentDiv.append(SettingsButton.firstChild)
       }
+      CallExtensionSettings()
+      RunExtensionSettingsJS()
 
       const AddedSettings = document.getElementById('AddedSettings')
       const extensionsettings = document.getElementById('ExtensionPopup')
       AddedSettings.addEventListener('click', function () {
-        extensionsettings.classList.toggle('hidden')
+        extensionsettings.classList.remove('hidden')
         SettingsClicked = true
       })
     }
@@ -2005,8 +1737,9 @@ function CheckCurrentLesson (lesson, num) {
 
   // If 5 minutes before the start of another lesson:
   if (minutes === 5) {
-    chrome.storage.local.get('lessonalert', function (result) {
-      if (result.lessonalert) {
+    const result = browser.storage.local.get('lessonalert')
+    function notifPerm (item) {
+      if (item.lessonalert) {
         // Checks if notifications are supported
         if (!window.Notification) {
           console.log('Browser does not support notifications.')
@@ -2041,7 +1774,8 @@ function CheckCurrentLesson (lesson, num) {
           }
         }
       }
-    })
+    }
+    result.then(notifPerm, onError)
   }
 }
 
@@ -2185,7 +1919,7 @@ function callHomeTimetable (date, change) {
           const dummyDay = document.createElement('div')
           dummyDay.classList.add('day-empty')
           const img = document.createElement('img')
-          img.src = chrome.runtime.getURL('icons/betterseqta-light-icon.png')
+          img.src = browser.runtime.getURL('icons/betterseqta-light-icon.png')
           const text = document.createElement('p')
           text.innerText = 'No lessons available.'
           dummyDay.append(img)
@@ -2409,20 +2143,23 @@ function CreateSubjectFilter (subjectcode, itemcolour, checked) {
   label.append(span)
 
   input.addEventListener('change', function (change) {
-    chrome.storage.local.get(null, function (storage) {
+    const result = browser.storage.local.get()
+    function setSubjectFilters (storage) {
       const filters = storage.subjectfilters
       const id = change.target.id.split('-')[1]
       filters[id] = change.target.checked
 
-      chrome.storage.local.set({ subjectfilters: filters })
-    })
+      browser.storage.local.set({ subjectfilters: filters })
+    }
+    result.then(setSubjectFilters, onError)
   })
 
   return label
 }
 
 function CreateFilters (subjects) {
-  chrome.storage.local.get(null, function (result) {
+  const result = browser.storage.local.get()
+  function filterAppend (result) {
     const filteroptions = result.subjectfilters
 
     const filterdiv = document.querySelector('#upcoming-filters')
@@ -2430,13 +2167,14 @@ function CreateFilters (subjects) {
       const element = subjects[i]
       if (!Object.prototype.hasOwnProperty.call(filteroptions, element.code)) {
         filteroptions[element.code] = true
-        chrome.storage.local.set({ subjectfilters: filteroptions })
+        browser.storage.local.set({ subjectfilters: filteroptions })
       }
       const elementdiv = CreateSubjectFilter(element.code, element.colour, filteroptions[element.code])
 
       filterdiv.append(elementdiv)
     }
-  })
+  }
+  result.then(filterAppend, onError)
 }
 
 function CreateUpcomingSection (assessments) {
@@ -2547,9 +2285,11 @@ function CreateUpcomingSection (assessments) {
         addTomorrowinUpcoming()
       }
     }
-    chrome.storage.local.get(null, function (result) {
+    const result = browser.storage.local.get()
+    function filterAssessment (result) {
       FilterUpcomingAssessments(result.subjectfilters)
-    })
+    }
+    result.then(filterAssessment, onError)
   })
 }
 
@@ -2605,7 +2345,7 @@ function FilterUpcomingAssessments (subjectoptions) {
   }
 }
 
-chrome.storage.onChanged.addListener(function (changes) {
+browser.storage.onChanged.addListener(function (changes) {
   if (changes.subjectfilters) {
     FilterUpcomingAssessments(changes.subjectfilters.newValue)
   }
@@ -2645,7 +2385,8 @@ function CreateCustomShortcutDiv (element) {
 }
 
 function AddCustomShortcutsToPage () {
-  chrome.storage.local.get(['customshortcuts'], function (result) {
+  const result = browser.storage.local.get(['customshortcuts'])
+  function customShortcut (result) {
     const customshortcuts = Object.values(result)[0]
     if (customshortcuts.length > 0) {
       document.getElementsByClassName('shortcut-container')[0].style.display = 'block'
@@ -2654,7 +2395,8 @@ function AddCustomShortcutsToPage () {
         CreateCustomShortcutDiv(element)
       }
     }
-  })
+  }
+  result.then(customShortcut, onError)
 }
 
 function SendHomePage () {
@@ -2673,7 +2415,7 @@ function SendHomePage () {
 
     const titlediv = document.getElementById('title').firstChild
     titlediv.innerText = 'Home'
-    document.querySelector('link[rel*="icon"]').href = chrome.runtime.getURL('icons/icon-48.png')
+    document.querySelector('link[rel*="icon"]').href = browser.runtime.getURL('icons/icon-48.png')
 
     currentSelectedDate = new Date()
 
@@ -2691,7 +2433,7 @@ function SendHomePage () {
 
     // Formats the current date used send a request for timetable and notices later
     const TodayFormatted =
-      date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+      date.getFullYear() + '-' + ((date.getMonth() + 1) < 10 ? '0' : '') + (date.getMonth() + 1) + '-' + date.getDate()
 
     // Replaces actual date with a selected date. Used for testing.
     // TodayFormatted = "2020-08-31";
@@ -2763,7 +2505,8 @@ function SendHomePage () {
       document.getElementById('shortcuts').append(shortcut)
     }
     // Adds the shortcuts to the shortcut container
-    chrome.storage.local.get(['shortcuts'], function (result) {
+    let result = browser.storage.local.get(['shortcuts'])
+    function addShortcutToContainer (result) {
       const shortcuts = Object.values(result)[0]
       for (let i = 0; i < shortcuts.length; i++) {
         if (shortcuts[i].enabled) {
@@ -2783,7 +2526,9 @@ function SendHomePage () {
         // If there are no shortcuts, hide the container
         document.getElementsByClassName('shortcut-container')[0].style.display = 'none'
       }
-    })
+    }
+
+    result.then(addShortcutToContainer, onError)
 
     // Creates the upcoming container and appends to the home container
     const upcomingcontainer = document.createElement('div')
@@ -2810,7 +2555,7 @@ function SendHomePage () {
     document.getElementById('home-container').append(upcomingcontainer)
 
     // Creates the notices container into the home container
-    const NoticesStr = '<div class="notices-container border"><h2 class="home-subtitle">Notices</h2><div class="notice-container" id="notice-container"></div></div>'
+    const NoticesStr = `<div class="notices-container border"><div style="display: flex; justify-content: space-between"><h2 class="home-subtitle">Notices</h2><input type="date" value=${TodayFormatted}></div><div class="notice-container" id="notice-container"></div></div>`
     const Notices = stringToHTML(NoticesStr)
     // Appends the shortcut container into the home container
     document.getElementById('home-container').append(Notices.firstChild)
@@ -2841,62 +2586,146 @@ function SendHomePage () {
         } else {
           if (!NoticeContainer.innerText) {
             // For each element in the response json:
-            chrome.storage.local.get(['DarkMode'], function (result) {
+            const result = browser.storage.local.get(['DarkMode'])
+            function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
+                const labelArray = response.payload[0].value.split(' ')
+                if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
-                const NewNotice = document.createElement('div')
-                NewNotice.classList.add('notice')
-                const title = stringToHTML(
-                  '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
-                )
-                NewNotice.append(title.firstChild)
-
-                if (NoticesPayload.payload[i].label_title !== undefined) {
-                  const label = stringToHTML(
-                    '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                  const NewNotice = document.createElement('div')
+                  NewNotice.classList.add('notice')
+                  const title = stringToHTML(
+                    '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
                   )
-                  NewNotice.append(label.firstChild)
-                }
+                  NewNotice.append(title.firstChild)
 
-                const staff = stringToHTML(
-                  '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
-                )
-                NewNotice.append(staff.firstChild)
-                // Converts the string into HTML
-                const content = stringToHTML(NoticesPayload.payload[i].contents, true)
-                for (let i = 0; i < content.childNodes.length; i++) {
-                  NewNotice.append(content.childNodes[i])
-                }
-                // Gets the colour for the top section of each notice
-
-                let colour = NoticesPayload.payload[i].colour
-                if (typeof (colour) === 'string') {
-                  const rgb = GetThresholdofHex(colour)
-                  const DarkModeResult = result.DarkMode
-                  if (rgb < 100 && DarkModeResult) {
-                    colour = undefined
+                  if (NoticesPayload.payload[i].label_title !== undefined) {
+                    const label = stringToHTML(
+                      '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                    )
+                    NewNotice.append(label.firstChild)
                   }
-                }
 
-                const colourbar = document.createElement('div')
-                colourbar.classList.add('colourbar')
-                colourbar.style.background = 'var(--colour)'
-                NewNotice.style = `--colour: ${colour}`
-                // Appends the colour bar to the new notice
-                NewNotice.append(colourbar)
-                // Appends the new notice into the notice container
-                NoticeContainer.append(NewNotice)
+                  const staff = stringToHTML(
+                    '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
+                  )
+                  NewNotice.append(staff.firstChild)
+                  // Converts the string into HTML
+                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  for (let i = 0; i < content.childNodes.length; i++) {
+                    NewNotice.append(content.childNodes[i])
+                  }
+                  // Gets the colour for the top section of each notice
+
+                  let colour = NoticesPayload.payload[i].colour
+                  if (typeof (colour) === 'string') {
+                    const rgb = GetThresholdofHex(colour)
+                    const DarkModeResult = result.DarkMode
+                    if (rgb < 100 && DarkModeResult) {
+                      colour = undefined
+                    }
+                  }
+
+                  const colourbar = document.createElement('div')
+                  colourbar.classList.add('colourbar')
+                  colourbar.style.background = 'var(--colour)'
+                  NewNotice.style = `--colour: ${colour}`
+                  // Appends the colour bar to the new notice
+                  NewNotice.append(colourbar)
+                  // Appends the new notice into the notice container
+                  NoticeContainer.append(NewNotice)
+                }
               }
-            })
+            }
+            result.then(noticeInfoDiv, onError)
           }
         }
       }
     }
     // Data sent as the POST request
-    xhr2.send(JSON.stringify({ date: TodayFormatted }))
+    const dateControl = document.querySelector('input[type="date"]')
+    xhr2.send(JSON.stringify({ date: dateControl.value }))
+    function onInputChange (e) {
+      xhr2.open('POST', `${location.origin}/seqta/student/load/notices?`, true)
+      xhr2.setRequestHeader('Content-Type', 'application/json; charset=utf-8')
+      xhr2.send(JSON.stringify({ date: e.target.value }))
+      xhr2.onreadystatechange = function () {
+        if (xhr2.readyState === 4) {
+          const NoticesPayload = JSON.parse(xhr2.response)
+          const NoticeContainer = document.getElementById('notice-container')
+          if (NoticesPayload.payload.length === 0) {
+            if (!NoticeContainer.innerText) {
+              // If no notices: display no notices
+              const dummyNotice = document.createElement('div')
+              dummyNotice.textContent = 'No notices for today.'
+              dummyNotice.classList.add('dummynotice')
+              NoticeContainer.append(dummyNotice)
+            }
+          } else {
+            document.querySelectorAll('.notice').forEach(e => e.remove())
+            // For each element in the response json:
+            const result = browser.storage.local.get(['DarkMode'])
+            function noticeInfoDiv (result) {
+              for (let i = 0; i < NoticesPayload.payload.length; i++) {
+                const labelArray = response.payload[0].value.split(' ')
+
+                if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
+                // Create a div, and place information from json response
+                  const NewNotice = document.createElement('div')
+                  NewNotice.classList.add('notice')
+                  const title = stringToHTML(
+                    '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
+                  )
+                  NewNotice.append(title.firstChild)
+
+                  if (NoticesPayload.payload[i].label_title !== undefined) {
+                    const label = stringToHTML(
+                      '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                    )
+                    NewNotice.append(label.firstChild)
+                  }
+
+                  const staff = stringToHTML(
+                    '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
+                  )
+                  NewNotice.append(staff.firstChild)
+                  // Converts the string into HTML
+                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  for (let i = 0; i < content.childNodes.length; i++) {
+                    NewNotice.append(content.childNodes[i])
+                  }
+                  // Gets the colour for the top section of each notice
+
+                  let colour = NoticesPayload.payload[i].colour
+                  if (typeof (colour) === 'string') {
+                    const rgb = GetThresholdofHex(colour)
+                    const DarkModeResult = result.DarkMode
+                    if (rgb < 100 && DarkModeResult) {
+                      colour = undefined
+                    }
+                  }
+
+                  const colourbar = document.createElement('div')
+                  colourbar.classList.add('colourbar')
+                  colourbar.style.background = 'var(--colour)'
+                  NewNotice.style = `--colour: ${colour}`
+                  // Appends the colour bar to the new notice
+                  NewNotice.append(colourbar)
+                  // Appends the new notice into the notice container
+                  NoticeContainer.append(NewNotice)
+                }
+              }
+            }
+            result.then(noticeInfoDiv, onError)
+          }
+        }
+      }
+    }
+    dateControl.addEventListener('input', onInputChange)
 
     // Sends similar HTTP Post Request for the notices
-    chrome.storage.local.get(null, function (result) {
+    result = browser.storage.local.get()
+    function notifCollect (result) {
       if (result.notificationcollector) {
         const xhr3 = new XMLHttpRequest()
         xhr3.open(
@@ -2928,7 +2757,8 @@ function SendHomePage () {
           })
         )
       }
-    })
+    }
+    result.then(notifCollect, onError)
 
     GetUpcomingAssessments()
       .then((assessments) => {
@@ -2996,7 +2826,8 @@ function SendNewsPage () {
     titlediv.innerText = 'News'
     AppendLoadingSymbol('newsloading', '#news-container')
 
-    chrome.runtime.sendMessage({ type: 'sendNews' }, function (response) {
+    const message = browser.runtime.sendMessage({ type: 'sendNews' })
+    function respond (response) {
       const newsarticles = response.news.articles
       const newscontainer = document.querySelector('#news-container')
       document.getElementById('newsloading').remove()
@@ -3010,7 +2841,7 @@ function SendNewsPage () {
         articleimage.classList.add('articleimage')
 
         if (newsarticles[i].urlToImage === 'null') {
-          articleimage.style.backgroundImage = `url(${chrome.runtime.getURL('icons/betterseqta-light-outline.png')})`
+          articleimage.style.backgroundImage = `url(${browser.runtime.getURL('icons/betterseqta-light-outline.png')})`
           articleimage.style.width = '20%'
           articleimage.style.margin = '0 7.5%'
         } else {
@@ -3034,7 +2865,8 @@ function SendNewsPage () {
         newsarticle.append(articletext)
         newscontainer.append(newsarticle)
       }
-    })
+    }
+    message.then(respond, onError)
   }, 8)
 }
 
@@ -3046,7 +2878,7 @@ function addIFrameCSSToNotices () {
   // Iterates through the array, applying the iFrame css
   for (const item of userHTMLArray) {
     // Grabs the link of the CSS file
-    const fileref = GetNoticeiFrameCSSElement()
+    const fileref = GetCSSElement('inject/noticeiframe.css')
     // Grabs the HTML of the header tag
     const head = item.contentWindow.document.querySelectorAll('head')[0]
     // Checks if the CSS has already been applied. If it has, then it does nothing. If not, it appends the CSS file
@@ -3054,11 +2886,49 @@ function addIFrameCSSToNotices () {
   }
 }
 
+function documentTextColor () {
+  const result = browser.storage.local.get(['DarkMode'])
+  function changeDocTextCol (result) {
+    const Darkmode = result.DarkMode
+    if (Darkmode) {
+      const documentArray = document.querySelectorAll('td:not([class^="colourBar"]):not([class^="title"])')
+      const fullDocArray = document.querySelectorAll('tr.document')
+      const linkArray = document.querySelectorAll('a.uiFile')
+      for (const item of fullDocArray) {
+        item.classList.add('documentDark')
+      }
+      for (const item of linkArray) {
+        item.setAttribute('style', 'color: #06b4fc;')
+      }
+      for (const item of documentArray) {
+        item.setAttribute('style', 'color: white')
+      }
+    } else {
+      const documentArray = document.querySelectorAll('td:not([class^="colourBar"]):not([class^="title"])')
+      const fullDocArray = document.querySelectorAll('tr.document')
+      const linkArray = document.querySelectorAll('a.uiFile')
+      for (const item of fullDocArray) {
+        item.classList.remove('documentDark')
+      }
+      for (const item of linkArray) {
+        item.setAttribute('style', 'color: #3465a4;')
+      }
+      for (const item of documentArray) {
+        item.setAttribute('style', 'color: black')
+      }
+    }
+  }
+  result.then(changeDocTextCol, onError)
+}
+browser.storage.onChanged.addListener(documentTextColor)
+
 function LoadInit () {
   console.log('[BetterSEQTA] Started Init')
-  chrome.storage.local.get(null, function (result) {
+  const result = browser.storage.local.get()
+  function homePage (result) {
     if (result.onoff) {
       SendHomePage()
     }
-  })
+  }
+  result.then(homePage, onError)
 }

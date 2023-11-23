@@ -1,49 +1,51 @@
+import { onError } from './functions/onError'
+const browser = require('webextension-polyfill')
 function ReloadSEQTAPages () {
-  chrome.tabs.query({}, function (tabs) {
+  browser.tabs.query({}, function (tabs) {
     for (const tab of tabs) {
       if (tab.title.includes('SEQTA Learn')) {
-        chrome.tabs.reload(tab.id)
+        browser.tabs.reload(tab.id)
       }
     }
   })
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender) {
+browser.runtime.onMessage.addListener(function (request, sender) {
   if (request.type === 'reloadTabs') {
     ReloadSEQTAPages()
   } else if (request.type === 'githubTab') {
-    chrome.tabs.create({ url: 'https://github.com/crazypersonalph/betterseqta' })
+    browser.tabs.create({ url: 'https://github.com/crazypersonalph/betterseqta' })
   } else if (request.type === 'setDefaultStorage') {
     console.log('setting default values')
     SetStorageValue(DefaultValues)
   } else if (request.type === 'addPermissions') {
-    if (typeof (chrome.declarativeContent) !== 'undefined') {
-      chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
+    if (typeof (browser.declarativeContent) !== 'undefined') {
+      browser.declarativeContent.onPageChanged.removeRules(undefined, function () {
       })
     }
-    chrome.permissions.request({ permissions: ['declarativeContent'], origins: ['*://*/*'] }, function (granted) {
+    browser.permissions.request({ permissions: ['declarativeContent'], origins: ['*://*/*'] }, function (granted) {
       if (granted) {
         const rules = [
           {
             conditions: [
-              new chrome.declarativeContent.PageStateMatcher({
+              new browser.declarativeContent.PageStateMatcher({
                 pageUrl: { urlContains: 'site.seqta.com.au', schemes: ['https'] }
               })
             ],
-            actions: [new chrome.declarativeContent.RequestContentScript({ js: ['seqta.js'] })]
+            actions: [new browser.declarativeContent.RequestContentScript({ js: ['seqta.js'] })]
           },
           {
             conditions: [
-              new chrome.declarativeContent.PageStateMatcher({
+              new browser.declarativeContent.PageStateMatcher({
                 pageUrl: { urlContains: 'learn.', schemes: ['https'] }
               })
             ],
-            actions: [new chrome.declarativeContent.RequestContentScript({ js: ['seqta.js'] })]
+            actions: [new browser.declarativeContent.RequestContentScript({ js: ['seqta.js'] })]
           }
 
         ]
         for (let i = 0; i < rules.length; i++) {
-          chrome.declarativeContent.onPageChanged.addRules([rules[i]])
+          browser.declarativeContent.onPageChanged.addRules([rules[i]])
         }
         alert("Permissions granted. Reload SEQTA pages to see changes. If this workaround doesn't work, please contact the developer.")
       }
@@ -51,7 +53,7 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
   }
 })
 
-chrome.runtime.onMessage.addListener(
+browser.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.type === 'sendNews') {
       // Gets the current date
@@ -149,14 +151,15 @@ const DefaultValues = {
 
 function SetStorageValue (object) {
   for (const i in object) {
-    chrome.storage.local.set({ [i]: object[i] })
+    browser.storage.local.set({ [i]: object[i] })
   }
 }
 
 function UpdateCurrentValues (details) {
   console.log(details)
 
-  chrome.storage.local.get(null, function (items) {
+  const result = browser.storage.local.get()
+  function changeValues (items) {
     const CurrentValues = items
 
     const NewValue = Object.assign({}, DefaultValues, CurrentValues)
@@ -185,13 +188,14 @@ function UpdateCurrentValues (details) {
     }
 
     SetStorageValue(NewValue)
-  })
+  }
+  result.then(changeValues, onError)
 }
 
-chrome.runtime.onInstalled.addListener(function (event) {
-  chrome.storage.local.remove(['justupdated'])
+browser.runtime.onInstalled.addListener(function (event) {
+  browser.storage.local.remove(['justupdated'])
   UpdateCurrentValues()
-  if (/* chrome.runtime.getManifest().version > event.previousVersion || */ event.reason === 'install') {
-    chrome.storage.local.set({ justupdated: true })
+  if (/* browser.runtime.getManifest().version > event.previousVersion || */ event.reason === 'install') {
+    browser.storage.local.set({ justupdated: true })
   }
 })
