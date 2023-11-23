@@ -3,6 +3,7 @@ import { ShortcutLinks } from './functions/ShortcutLinks'
 import { MenuitemSVGKey } from './functions/MenuitemSVGKey'
 import { onError } from './functions/onError'
 import { CreateBackground } from './functions/CreateBackground'
+import { response } from './functions/GetPrefs'
 const browser = require('webextension-polyfill')
 const isChrome = window.chrome
 
@@ -2556,11 +2557,10 @@ function SendHomePage () {
     document.getElementById('home-container').append(upcomingcontainer)
 
     // Creates the notices container into the home container
-    const NoticesStr = `<div class="notices-container border"><div style="display: flex; justify-content: space-between"><h2 class="home-subtitle">Notices</h2><input type="date" value=${TodayFormatted}><select></select></div><div class="notice-container" id="notice-container"></div></div>`
+    const NoticesStr = `<div class="notices-container border"><div style="display: flex; justify-content: space-between"><h2 class="home-subtitle">Notices</h2><input type="date" value=${TodayFormatted}></div><div class="notice-container" id="notice-container"></div></div>`
     const Notices = stringToHTML(NoticesStr)
     // Appends the shortcut container into the home container
     document.getElementById('home-container').append(Notices.firstChild)
-    labelRetrieval()
 
     callHomeTimetable(TodayFormatted)
 
@@ -2591,49 +2591,52 @@ function SendHomePage () {
             const result = browser.storage.local.get(['DarkMode'])
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
+                const labelArray = response.payload[0].value.split(' ')
+                if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
-                const NewNotice = document.createElement('div')
-                NewNotice.classList.add('notice')
-                const title = stringToHTML(
-                  '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
-                )
-                NewNotice.append(title.firstChild)
-
-                if (NoticesPayload.payload[i].label_title !== undefined) {
-                  const label = stringToHTML(
-                    '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                  const NewNotice = document.createElement('div')
+                  NewNotice.classList.add('notice')
+                  const title = stringToHTML(
+                    '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
                   )
-                  NewNotice.append(label.firstChild)
-                }
+                  NewNotice.append(title.firstChild)
 
-                const staff = stringToHTML(
-                  '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
-                )
-                NewNotice.append(staff.firstChild)
-                // Converts the string into HTML
-                const content = stringToHTML(NoticesPayload.payload[i].contents, true)
-                for (let i = 0; i < content.childNodes.length; i++) {
-                  NewNotice.append(content.childNodes[i])
-                }
-                // Gets the colour for the top section of each notice
-
-                let colour = NoticesPayload.payload[i].colour
-                if (typeof (colour) === 'string') {
-                  const rgb = GetThresholdofHex(colour)
-                  const DarkModeResult = result.DarkMode
-                  if (rgb < 100 && DarkModeResult) {
-                    colour = undefined
+                  if (NoticesPayload.payload[i].label_title !== undefined) {
+                    const label = stringToHTML(
+                      '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                    )
+                    NewNotice.append(label.firstChild)
                   }
-                }
 
-                const colourbar = document.createElement('div')
-                colourbar.classList.add('colourbar')
-                colourbar.style.background = 'var(--colour)'
-                NewNotice.style = `--colour: ${colour}`
-                // Appends the colour bar to the new notice
-                NewNotice.append(colourbar)
-                // Appends the new notice into the notice container
-                NoticeContainer.append(NewNotice)
+                  const staff = stringToHTML(
+                    '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
+                  )
+                  NewNotice.append(staff.firstChild)
+                  // Converts the string into HTML
+                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  for (let i = 0; i < content.childNodes.length; i++) {
+                    NewNotice.append(content.childNodes[i])
+                  }
+                  // Gets the colour for the top section of each notice
+
+                  let colour = NoticesPayload.payload[i].colour
+                  if (typeof (colour) === 'string') {
+                    const rgb = GetThresholdofHex(colour)
+                    const DarkModeResult = result.DarkMode
+                    if (rgb < 100 && DarkModeResult) {
+                      colour = undefined
+                    }
+                  }
+
+                  const colourbar = document.createElement('div')
+                  colourbar.classList.add('colourbar')
+                  colourbar.style.background = 'var(--colour)'
+                  NewNotice.style = `--colour: ${colour}`
+                  // Appends the colour bar to the new notice
+                  NewNotice.append(colourbar)
+                  // Appends the new notice into the notice container
+                  NoticeContainer.append(NewNotice)
+                }
               }
             }
             result.then(noticeInfoDiv, onError)
@@ -2666,49 +2669,53 @@ function SendHomePage () {
             const result = browser.storage.local.get(['DarkMode'])
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
+                const labelArray = response.payload[0].value.split(' ')
+
+                if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
-                const NewNotice = document.createElement('div')
-                NewNotice.classList.add('notice')
-                const title = stringToHTML(
-                  '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
-                )
-                NewNotice.append(title.firstChild)
-
-                if (NoticesPayload.payload[i].label_title !== undefined) {
-                  const label = stringToHTML(
-                    '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                  const NewNotice = document.createElement('div')
+                  NewNotice.classList.add('notice')
+                  const title = stringToHTML(
+                    '<h3 style="color:var(--colour)">' + NoticesPayload.payload[i].title + '</h3>'
                   )
-                  NewNotice.append(label.firstChild)
-                }
+                  NewNotice.append(title.firstChild)
 
-                const staff = stringToHTML(
-                  '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
-                )
-                NewNotice.append(staff.firstChild)
-                // Converts the string into HTML
-                const content = stringToHTML(NoticesPayload.payload[i].contents, true)
-                for (let i = 0; i < content.childNodes.length; i++) {
-                  NewNotice.append(content.childNodes[i])
-                }
-                // Gets the colour for the top section of each notice
-
-                let colour = NoticesPayload.payload[i].colour
-                if (typeof (colour) === 'string') {
-                  const rgb = GetThresholdofHex(colour)
-                  const DarkModeResult = result.DarkMode
-                  if (rgb < 100 && DarkModeResult) {
-                    colour = undefined
+                  if (NoticesPayload.payload[i].label_title !== undefined) {
+                    const label = stringToHTML(
+                      '<h5 style="color:var(--colour)">' + NoticesPayload.payload[i].label_title + '</h5>'
+                    )
+                    NewNotice.append(label.firstChild)
                   }
-                }
 
-                const colourbar = document.createElement('div')
-                colourbar.classList.add('colourbar')
-                colourbar.style.background = 'var(--colour)'
-                NewNotice.style = `--colour: ${colour}`
-                // Appends the colour bar to the new notice
-                NewNotice.append(colourbar)
-                // Appends the new notice into the notice container
-                NoticeContainer.append(NewNotice)
+                  const staff = stringToHTML(
+                    '<h6 style="color:var(--colour)">' + NoticesPayload.payload[i].staff + '</h6>'
+                  )
+                  NewNotice.append(staff.firstChild)
+                  // Converts the string into HTML
+                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  for (let i = 0; i < content.childNodes.length; i++) {
+                    NewNotice.append(content.childNodes[i])
+                  }
+                  // Gets the colour for the top section of each notice
+
+                  let colour = NoticesPayload.payload[i].colour
+                  if (typeof (colour) === 'string') {
+                    const rgb = GetThresholdofHex(colour)
+                    const DarkModeResult = result.DarkMode
+                    if (rgb < 100 && DarkModeResult) {
+                      colour = undefined
+                    }
+                  }
+
+                  const colourbar = document.createElement('div')
+                  colourbar.classList.add('colourbar')
+                  colourbar.style.background = 'var(--colour)'
+                  NewNotice.style = `--colour: ${colour}`
+                  // Appends the colour bar to the new notice
+                  NewNotice.append(colourbar)
+                  // Appends the new notice into the notice container
+                  NoticeContainer.append(NewNotice)
+                }
               }
             }
             result.then(noticeInfoDiv, onError)
@@ -2916,23 +2923,6 @@ function documentTextColor () {
   result.then(changeDocTextCol, onError)
 }
 browser.storage.onChanged.addListener(documentTextColor)
-
-function labelRetrieval () {
-  async function getLabels () {
-    await fetch(`${location.origin}/seqta/student/load/notices?`, { method: 'POST', body: JSON.stringify({ mode: 'labels' }), headers: { 'Content-Type': 'application/json; charset=utf-8' } }).then((response) => {
-      response.json().then((data) => {
-        const selector = document.querySelectorAll('select')[0]
-        for (const item in JSON.parse(JSON.stringify(data.payload))) {
-          const array = JSON.parse(JSON.stringify(data.payload))[item]
-          const parser = new DOMParser()
-          const doc = parser.parseFromString(`<option value="${array.id}">${array.title}</option>`, 'text/html')
-          selector.append(doc.body.firstChild)
-        }
-      })
-    })
-  }
-  getLabels()
-}
 
 function LoadInit () {
   console.log('[BetterSEQTA] Started Init')
