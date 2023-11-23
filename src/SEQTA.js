@@ -1565,12 +1565,10 @@ function AddBetterSEQTAElements (toggle) {
         menu.appendChild(a)
 
         editmenu = document.querySelector('#editmenu')
-        window.addEventListener('DOMContentLoaded', (event) => {
-          editmenu.addEventListener('click', function () {
-            if (!MenuOptionsOpen) {
-              OpenMenuOptions()
-            }
-          })
+        editmenu.addEventListener('click', function () {
+          if (!MenuOptionsOpen) {
+            OpenMenuOptions()
+          }
         })
 
         const menuCover = document.querySelector('#icon-cover')
