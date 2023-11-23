@@ -637,7 +637,6 @@ function ColorLuminance (hex, lum) {
 }
 
 browser.storage.onChanged.addListener(function (changes) {
-  console.log(changes)
   if (changes.selectedColor) {
     const rbg = GetThresholdofHex(changes.selectedColor.newValue)
     if (rbg > 210) {
@@ -1150,7 +1149,6 @@ function CallExtensionSettings () {
 
   const container = document.getElementById('container')
   const extensionsettings = document.getElementById('ExtensionPopup')
-  console.log(extensionsettings)
   container.onclick = function () {
     if (!SettingsClicked) {
       extensionsettings.classList.add('hidden')
@@ -1624,7 +1622,6 @@ function AddBetterSEQTAElements (toggle) {
             const result = browser.storage.local.get(['DarkMode'])
             function actuallyDarkenEverything (item) {
               const alliframes = document.getElementsByTagName('iframe')
-              console.log(alliframes)
               const fileref = GetCSSElement('inject/iframe.css')
 
               if (!item.DarkMode) {
@@ -1676,7 +1673,6 @@ function AddBetterSEQTAElements (toggle) {
       const AddedSettings = document.getElementById('AddedSettings')
       const extensionsettings = document.getElementById('ExtensionPopup')
       AddedSettings.addEventListener('click', function () {
-        console.log(extensionsettings)
         extensionsettings.classList.remove('hidden')
         SettingsClicked = true
       })
