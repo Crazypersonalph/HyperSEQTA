@@ -19,12 +19,26 @@ blockquote.forward > .preamble > .sender > .label {
 }
 table th {
   background-color: #161616;
+  border: none;
 }
 table {
   background-color: #232323;
+  border: none;
 }
 
-a:not(.resource) {
+table tbody {
+  border: none;
+}
+
+table tr {
+  border: none;
+}
+
+table td {
+  border: none;
+}
+
+.userHTML>div>a:not(.resource) {
 	color: #06b4fc;
 	text-decoration: underline;
 	transition: text-shadow 0.5s;

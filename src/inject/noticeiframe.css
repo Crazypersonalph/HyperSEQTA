@@ -1,0 +1,5 @@
+.userHTML>div>a:not(.resource) {
+	color: #06b4fc;
+	text-decoration: underline;
+	transition: text-shadow 0.5s;
+}

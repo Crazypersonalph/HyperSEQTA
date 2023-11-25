@@ -9,29 +9,42 @@ HyperSEQTA: The continuation of the BetterSeqta project
 </p>
 
 <p align="center">
-(This project is not related to in any way/shape/form to Education Horizons and/or any related parties)
+<i>This project is not related to in any way/shape/form to Education Horizons and/or any related parties.</i>
 </p>
 
-<p align="center">
-Contributors (very cool people):
+<div align="center">
+<h2>Contributors (very cool people)</h2>
 <br>
-Nulkem, creator of the original project
+Nulkem, the original project's creator.
 <br>
-Crazypersonalph, currently the lead developer of this fork
+Crazypersonalph, current lead developer of this fork.
 <br>
-Norangeflame, helped fix notices issue
-</p>
-<br>
-<p align="center">
-Acknowledgements:
-<br>
-Nulkem, creator of the original BetterSeqta project, and so some of his code is used
-<br>
-Momo Bassit, creator of the Coloris project, which is also used in the BetterSeqta project
-<br>
-Dr.-Ing. Mario Heiderich, Cure53, creators of the DOMPurify project
-</p>
+Norangeflame, helped fix the notices issue.
+</div>
 <br>
 <div align="center">
+<h2>
+Build instructions:
+</h2>
+<br>
+<code>pnpm install</code>
+<br>
+<code>pnpm build</code>
+</div>
+<br>
+<div align="center">
+<h2>Acknowledgements:</h2>
+<br>
+Nulkem, creator of the original BetterSEQTA project, therefore some of his code is reused.
+<br>
+Momo Bassit, creator of the Coloris project, utilised by BetterSEQTA.
+<br>
+Dr.-Ing. Mario Heiderich, Cure53, creators of the DOMPurify project.
+</div>
+<br>
+<div align="center">
+<h2>Links:</h2>
+<a href="https://chrome.google.com/webstore/detail/betterseqta/hnbneadgjmefpddchlhefgbkkfbhdebl/related">Chrome Web Store</a>
+<br>
 <a href="https://discord.gg/jPFpsrtPyX">Join the Discord!</a>
 </div>
