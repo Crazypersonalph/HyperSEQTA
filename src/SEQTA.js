@@ -1482,8 +1482,6 @@ function AddhyperseqtaElements (toggle) {
             const ogTiming = style.getPropertyValue('animation-duration')
             const sliced = ogTiming.slice(0, -1)
             bgSingular.style.animationDuration = `${(Number(sliced) / (item.bksliderinput / 100)).toString()}s`
-            const thing = window.getComputedStyle(bgSingular)
-            console.log(thing.getPropertyValue('animation-duration'))
           }
         }
         result.then(animbkEnable, onError)
@@ -2594,9 +2592,6 @@ function SendHomePage () {
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
                 const labelArray = response.payload[1].value.split(' ')
-                console.log(response.payload)
-                console.log(labelArray)
-                console.log(JSON.stringify(NoticesPayload.payload[i].label))
                 if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
                   const NewNotice = document.createElement('div')
@@ -2674,7 +2669,7 @@ function SendHomePage () {
             const result = browser.storage.local.get(['DarkMode'])
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
-                const labelArray = response.payload[0].value.split(' ')
+                const labelArray = response.payload[1].value.split(' ')
 
                 if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response

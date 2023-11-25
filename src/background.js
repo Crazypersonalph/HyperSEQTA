@@ -59,12 +59,8 @@ browser.runtime.onMessage.addListener(
       // Gets the current date
       const date = new Date()
       // Formats the current date used send a request for timetable and notices later
-      const TodayFormatted =
-        date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
 
       const from = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + (date.getDate() - 1)
-      console.log(TodayFormatted)
-      console.log(from)
 
       // var url = `https://newsapi.org/v2/everything?sources=abc-news&from=${TodayFormatted}&sortBy=popularity&apiKey=17c0da766ba347c89d094449504e3080`;
       let url = `https://newsapi.org/v2/everything?domains=abc.net.au&from=${from}&apiKey=17c0da766ba347c89d094449504e3080`
@@ -156,8 +152,6 @@ function SetStorageValue (object) {
 }
 
 function UpdateCurrentValues (details) {
-  console.log(details)
-
   const result = browser.storage.local.get()
   function changeValues (items) {
     const CurrentValues = items
