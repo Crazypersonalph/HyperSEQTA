@@ -4,7 +4,6 @@ const lessonalert = document.querySelector('#lessonalert')
 const aboutsection = document.querySelector('#aboutsection')
 const shortcutsection = document.querySelector('#shortcutsection')
 const miscsection = document.querySelector('#miscsection')
-const mainpage = document.querySelector('#mainpage')
 const colorpicker = document.querySelector('#colorpicker')
 const animatedbk = document.querySelector('#animatedbk')
 const bkslider = document.querySelector('#bksliderinput')
@@ -41,19 +40,6 @@ let validName = false
 
 function openGithub () {
   chrome.tabs.create({ url: 'https://github.com/Crazypersonalph/hyperseqta' })
-}
-
-function openPage (page) {
-  mainpage.style.left = '-350px'
-  page.style.right = '0px'
-}
-
-function backToMainMenu () {
-  mainpage.style.left = '0px'
-
-  menupage.style.right = '-350px'
-  shortcutpage.style.right = '-350px'
-  miscpage.style.right = '-350px'
 }
 
 function resetActive () {
@@ -212,17 +198,12 @@ function CreateCustomShortcut () {
     shortcutname
   )
 }
-
-function onError (e) {
-  console.error(e)
-}
 /*
 On opening the options page, fetch stored settings and update the UI with them.
 */
 chrome.storage.local.get(null, function (result) {
   document.getElementsByClassName('clr-field')[0].style.color = result.selectedColor
   colorpicker.value = result.selectedColor
-  console.log(result)
   updateUI(result)
 })
 
