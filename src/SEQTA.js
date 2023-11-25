@@ -2593,7 +2593,10 @@ function SendHomePage () {
             const result = browser.storage.local.get(['DarkMode'])
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
-                const labelArray = response.payload[0].value.split(' ')
+                const labelArray = response.payload[1].value.split(' ')
+                console.log(response.payload)
+                console.log(labelArray)
+                console.log(JSON.stringify(NoticesPayload.payload[i].label))
                 if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
                   const NewNotice = document.createElement('div')
