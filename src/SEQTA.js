@@ -2615,7 +2615,7 @@ function SendHomePage () {
                   )
                   NewNotice.append(staff.firstChild)
                   // Converts the string into HTML
-                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w][:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
+                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w]+[:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
                   for (let i = 0; i < content.childNodes.length; i++) {
                     NewNotice.append(content.childNodes[i])
                   }
@@ -2694,7 +2694,7 @@ function SendHomePage () {
                   )
                   NewNotice.append(staff.firstChild)
                   // Converts the string into HTML
-                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w][:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
+                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w]+[:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
                   for (let i = 0; i < content.childNodes.length; i++) {
                     NewNotice.append(content.childNodes[i])
                   }
@@ -2900,7 +2900,7 @@ function removeThemeTagsFromNotices () {
     if (body) {
     // Replaces the theme tag with nothing
       const bodyText = body.innerHTML
-      body.innerhtml = bodyText.replace(/\[\[[\w][:][\w]+[\]\]]+/g, '').replace(/ +/, ' ')
+      body.innerhtml = bodyText.replace(/\[\[[\w]+[:][\w]+[\]\]]+/g, '').replace(/ +/, ' ')
     }
   }
 }
