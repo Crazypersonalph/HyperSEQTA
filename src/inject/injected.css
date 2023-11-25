@@ -173,7 +173,8 @@ html {
 }
 
 .student #menu>ul::before {
-  background-image: var(--betterseqta-logo);
+  background-image: var(--hyperseqta-logo);
+  background-size: auto 26px;
 }
 
 #menu li:hover {
@@ -1143,7 +1144,7 @@ body {
   content: "";
   width: 14px;
   height: 12px;
-  background-image: url(../../public/icons/betterseqta-light-outline.png);
+  background-image: url(../../public/icons/hyperseqta-light-icon.png);
   display: inline-block;
   background-size: 18px 18px;
   color: #fff;
