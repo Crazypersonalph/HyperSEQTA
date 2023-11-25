@@ -40,7 +40,7 @@ let validURL = false
 let validName = false
 
 function openGithub () {
-  chrome.tabs.create({ url: 'https://github.com/Crazypersonalph/betterseqta' })
+  chrome.tabs.create({ url: 'https://github.com/Crazypersonalph/hyperseqta' })
 }
 
 function openPage (page) {

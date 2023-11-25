@@ -106,7 +106,7 @@ function ApplyCSSToHiddenMenuItems () {
       if (!Object.values(item.menuitems)[i].toggle) {
         stylesheetInnerText += SetDisplayNone(Object.keys(item.menuitems)[i])
         console.log(
-          `[BetterSEQTA] Hiding ${Object.keys(item.menuitems)[i]} menu item`
+          `[HyperSEQTA] Hiding ${Object.keys(item.menuitems)[i]} menu item`
         )
       }
     }
@@ -131,13 +131,13 @@ function OpenWhatsNewPopup () {
 
   const header = stringToHTML(`<div class="whatsnewHeader">
   <h1>What's New</h1>
-  <p>BetterSEQTA V${browser.runtime.getManifest().version}</p>
+  <p>HyperSEQTA V${browser.runtime.getManifest().version}</p>
   </div>`).firstChild
 
   const imagecont = document.createElement('div')
   imagecont.classList.add('whatsnewImgContainer')
   const image = document.createElement('img')
-  image.src = browser.runtime.getURL('icons/betterseqta-dark-icon.png')
+  image.src = browser.runtime.getURL('icons/hyperseqta-dark-icon.png')
   image.classList.add('whatsnewImg')
   imagecont.append(image)
 
@@ -150,15 +150,15 @@ function OpenWhatsNewPopup () {
   const text = stringToHTML(
     `
   <div class="whatsnewTextContainer" style="height: 50%;overflow-y: scroll;">
-  <h1>2.0.7 - Added support to other domains + Minor bug fixes</h1><li>Fixed BetterSEQTA not loading on some pages</li><li>Fixed text colour of notices being unreadable</li><li>Fixed pages not reloading when saving changes</li>
+  <h1>2.0.7 - Added support to other domains + Minor bug fixes</h1><li>Fixed HyperSEQTA not loading on some pages</li><li>Fixed text colour of notices being unreadable</li><li>Fixed pages not reloading when saving changes</li>
   <h1>2.0.2 - Minor bug fixes</h1><li>Fixed indicator for current lesson</li><li>Fixed text colour for DM messages list in Light mode</li><li>Fixed user info text colour</li>
-  <h1>Sleek New Layout</h1><li>Updated with a new font and presentation, BetterSEQTA has never looked better.</li>
+  <h1>Sleek New Layout</h1><li>Updated with a new font and presentation, HyperSEQTA has never looked better.</li>
   <h1>New Updated Sidebar</h1><li>Condensed appearance with new updated icons.</li>
   <h1>Independent Light Mode and Dark Mode</h1><li>Dark mode and Light mode are now available to pick alongside your chosen Theme Colour. Your Theme Colour will now become an accent colour for the page.
   Light/Dark mode can be toggled with the new button, found in the top-right of the menu bar.
   </li>
   <img style="width:150px;margin-bottom:5px" src="${browser.runtime.getURL('inject/preview/lightdarkmode.png')}">
-  <h1>Create Custom Shortcuts</h1><li>Found in the BetterSEQTA Settings menu, custom shortcuts can now be created with a name and URL of your choice.</li>
+  <h1>Create Custom Shortcuts</h1><li>Found in the HyperSEQTA Settings menu, custom shortcuts can now be created with a name and URL of your choice.</li>
   <img style="width:150px;" src="${browser.runtime.getURL('inject/preview/customshortcut.png')}">
   </div>
   `
@@ -168,7 +168,7 @@ function OpenWhatsNewPopup () {
   <div class="whatsnewFooter">
   <div>
   Report bugs and feedback: 
-  <a href="https://github.com/crazypersonalph/betterseqta" target="_blank" style="background: none !important; margin: 0 5px; padding:0;"><img style="filter: invert(99%) sepia(0%) saturate(627%) hue-rotate(255deg) brightness(122%) contrast(100%);" height="23" src="${browser.runtime.getURL('popup/github.svg')}" alt=""></a>
+  <a href="https://github.com/crazypersonalph/hyperseqta" target="_blank" style="background: none !important; margin: 0 5px; padding:0;"><img style="filter: invert(99%) sepia(0%) saturate(627%) hue-rotate(255deg) brightness(122%) contrast(100%);" height="23" src="${browser.runtime.getURL('popup/github.svg')}" alt=""></a>
   </div>
   <div>Support me: <a href="https://ko-fi.com/crazypersonalph" target="_blank" style="background: none !important; margin:0;margin-left:6px; padding:0;"><img height="25" style="border:0px;height:25px;" src="${browser.runtime.getURL('popup/kofi3.png')}" border="0" alt="Buy Me a Coffee at ko-fi.com"></a></div>
   </div>
@@ -351,11 +351,11 @@ function SortMessagePageItems (messagesParentElement) {
 }
 
 function LoadPageElements () {
-  AddBetterSEQTAElements(true)
+  AddhyperseqtaElements(true)
   const sublink = window.location.href.split('/')[4]
   switch (sublink) {
     case 'news' : {
-      console.log('[BetterSEQTA] Started Init')
+      console.log('[HyperSEQTA] Started Init')
       const result = browser.storage.local.get()
       function loadElements (item) {
         if (item.onoff) {
@@ -382,7 +382,7 @@ function LoadPageElements () {
                     'notifications__bubble___1EkSQ'
                   )[0]
                   if (typeof alertdiv === 'undefined') {
-                    console.log('[BetterSEQTA] No notifications currently')
+                    console.log('[HyperSEQTA] No notifications currently')
                   } else {
                     alertdiv.textContent = Notifications.payload.notifications.length
                   }
@@ -439,7 +439,7 @@ function LoadPageElements () {
                 'notifications__bubble___1EkSQ'
               )[0]
               if (typeof alertdiv === 'undefined') {
-                console.log('[BetterSEQTA] No notifications currently')
+                console.log('[HyperSEQTA] No notifications currently')
               } else {
                 alertdiv.textContent = Notifications.payload.notifications.length
               }
@@ -521,7 +521,7 @@ function tryLoad () {
   })
 
   waitForElm('.code').then((elm) => {
-    if (!elm.innerText.includes('BetterSEQTA')) { LoadPageElements() }
+    if (!elm.innerText.includes('HyperSEQTA')) { LoadPageElements() }
   })
 
   // Waits for page to call on load, run scripts
@@ -534,6 +534,9 @@ function tryLoad () {
     },
     true
   )
+
+  const observer = new MutationObserver(list => { documentTextColor() })
+  observer.observe(document.getElementById('toolbar'), { attributes: true, childList: true, subtree: true })
 }
 
 function ChangeMenuItemPositions (storage) {
@@ -592,7 +595,7 @@ async function ObserveMenuItemPosition () {
 }
 
 function AppendElementsToDisabledPage () {
-  AddBetterSEQTAElements(false)
+  AddhyperseqtaElements(false)
 
   const settingsStyle = document.createElement('style')
   settingsStyle.innerText = `
@@ -642,10 +645,10 @@ browser.storage.onChanged.addListener(function (changes) {
     const rbg = GetThresholdofHex(changes.selectedColor.newValue)
     if (rbg > 210) {
       document.documentElement.style.setProperty('--text-color', 'black')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-dark-full.png')})`)
+      document.documentElement.style.setProperty('--hyperseqta-logo', `url(${browser.runtime.getURL('icons/hyperseqta-dark-full.png')})`)
     } else {
       document.documentElement.style.setProperty('--text-color', 'white')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-light-full.png')})`)
+      document.documentElement.style.setProperty('--hyperseqta-logo', `url(${browser.runtime.getURL('icons/hyperseqta-light-full.png')})`)
     }
 
     document.documentElement.style.setProperty('--better-main', changes.selectedColor.newValue)
@@ -684,12 +687,12 @@ async function CheckLoadOnPeriods () {
 }
 
 function RunFunctionOnTrue (storedSetting) {
-  // If the option is 'on', open BetterSEQTA
+  // If the option is 'on', open HyperSEQTA
   if (typeof storedSetting.onoff === 'undefined') {
     browser.runtime.sendMessage({ type: 'setDefaultStorage' })
   }
   if (storedSetting.onoff) {
-    console.log('[BetterSEQTA] Enabled')
+    console.log('[HyperSEQTA] Enabled')
     // Injecting CSS File to the webpage to overwrite SEQTA's default CSS
     const cssFile = browser.runtime.getURL('inject/injected.css')
     const fileref = document.createElement('link')
@@ -717,10 +720,10 @@ function RunFunctionOnTrue (storedSetting) {
     const rbg = GetThresholdofHex(storedSetting.selectedColor)
     if (rbg > 210) {
       document.documentElement.style.setProperty('--text-color', 'black')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-dark-full.png')})`)
+      document.documentElement.style.setProperty('--hyperseqta-logo', `url(${browser.runtime.getURL('icons/hyperseqta-dark-full.png')})`)
     } else {
       document.documentElement.style.setProperty('--text-color', 'white')
-      document.documentElement.style.setProperty('--betterseqta-logo', `url(${browser.runtime.getURL('icons/betterseqta-light-full.png')})`)
+      document.documentElement.style.setProperty('--hyperseqta-logo', `url(${browser.runtime.getURL('icons/hyperseqta-light-full.png')})`)
     }
 
     document.documentElement.style.setProperty('--better-main', storedSetting.selectedColor)
@@ -780,7 +783,7 @@ document.addEventListener(
     CheckForMenuList()
     if (document.childNodes[1].textContent?.includes('Copyright (c) SEQTA Software') && document.title.includes('SEQTA Learn') && !IsSEQTAPage) {
       IsSEQTAPage = true
-      console.log('[BetterSEQTA] Verified SEQTA Page')
+      console.log('[HyperSEQTA] Verified SEQTA Page')
 
       const link = document.createElement('link')
       link.href = browser.runtime.getURL('inject/documentload.css')
@@ -1304,7 +1307,7 @@ function OpenMenuOptions () {
       const MenuItemToggle = stringToHTML(`<div class="onoffswitch" style="margin: auto 0;"><input class="onoffswitch-checkbox notification menuitem" type="checkbox" id="${element.dataset.key}"><label for="${element.dataset.key}" class="onoffswitch-label"></label>`).firstChild
       element.append(MenuItemToggle)
 
-      if (!element.dataset.betterseqta) {
+      if (!element.dataset.hyperseqta) {
         const a = document.createElement('section')
         a.innerHTML = element.innerHTML
         cloneAttributes(a, element)
@@ -1388,7 +1391,7 @@ function OpenMenuOptions () {
         element.classList.remove('draggable')
         element.setAttribute('draggable', false)
 
-        if (!element.dataset.betterseqta) {
+        if (!element.dataset.hyperseqta) {
           const a = document.createElement('li')
           a.innerHTML = element.innerHTML
           cloneAttributes(a, element)
@@ -1440,21 +1443,21 @@ function ReplaceMenuSVG (element, svg) {
   item.insertBefore(newsvg, item.firstChild)
 }
 
-function AddBetterSEQTAElements (toggle) {
+function AddhyperseqtaElements (toggle) {
   const code = document.getElementsByClassName('code')[0]
-  // Replaces students code with the version of BetterSEQTA
+  // Replaces students code with the version of HyperSEQTA
   if (code != null) {
-    if (!code.innerHTML.includes('BetterSEQTA')) {
+    if (!code.innerHTML.includes('HyperSEQTA')) {
       UserInitalCode = code.innerText
-      code.innerText = `BetterSEQTA v${browser.runtime.getManifest().version}`
+      code.innerText = `HyperSEQTA v${browser.runtime.getManifest().version}`
       code.setAttribute('data-hover', 'Click for user code')
       code.addEventListener('click', function () {
         const code = document.getElementsByClassName('code')[0]
-        if (code.innerText.includes('BetterSEQTA')) {
+        if (code.innerText.includes('HyperSEQTA')) {
           code.innerText = UserInitalCode
-          code.setAttribute('data-hover', 'Click for BetterSEQTA version')
+          code.setAttribute('data-hover', 'Click for HyperSEQTA version')
         } else {
-          code.innerText = `BetterSEQTA v${browser.runtime.getManifest().version}`
+          code.innerText = `HyperSEQTA v${browser.runtime.getManifest().version}`
           code.setAttribute('data-hover', 'Click for user code')
         }
       })
@@ -1489,7 +1492,7 @@ function AddBetterSEQTAElements (toggle) {
         titlebar.classList.add('titlebar')
         const container = document.getElementById('content')
         container.append(titlebar)
-        const NewButtonStr = '<li class="item" data-key="home" id="homebutton" data-path="/home" data-betterseqta="true"><label><svg style="width:24px;height:24px" viewBox="0 0 24 24"><path fill="currentColor" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" /></svg>Home</label></li>'
+        const NewButtonStr = '<li class="item" data-key="home" id="homebutton" data-path="/home" data-hyperseqta="true"><label><svg style="width:24px;height:24px" viewBox="0 0 24 24"><path fill="currentColor" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" /></svg>Home</label></li>'
         const NewButton = stringToHTML(NewButtonStr)
         const menu = document.getElementById('menu')
         const List = menu.firstChild
@@ -1547,7 +1550,7 @@ function AddBetterSEQTAElements (toggle) {
               })
           })
 
-        const NewsButtonStr = '<li class="item" data-key="news" id="newsbutton" data-path="/news" data-betterseqta="true"><label><svg style="width:24px;height:24px" viewBox="0 0 24 24"><path fill="currentColor" d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3M5 7H10V13H5V7M19 17H5V15H19V17M19 13H12V11H19V13M19 9H12V7H19V9Z" /></svg>News</label></li>'
+        const NewsButtonStr = '<li class="item" data-key="news" id="newsbutton" data-path="/news" data-hyperseqta="true"><label><svg style="width:24px;height:24px" viewBox="0 0 24 24"><path fill="currentColor" d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3M5 7H10V13H5V7M19 17H5V15H19V17M19 13H12V11H19V13M19 9H12V7H19V9Z" /></svg>News</label></li>'
         const NewsButton = stringToHTML(NewsButtonStr)
         List.appendChild(NewsButton.firstChild)
 
@@ -1597,7 +1600,7 @@ function AddBetterSEQTAElements (toggle) {
       if (toggle) {
         // Creates settings and dashboard buttons next to alerts
         const SettingsButton = stringToHTML(
-          '<button class="addedButton tooltip" id="AddedSettings""><svg width="24" height="24" viewBox="0 0 24 24"><g><g><path d="M23.182,6.923c-.29,0-3.662,2.122-4.142,2.4l-2.8-1.555V4.511l4.257-2.456a.518.518,0,0,0,.233-.408.479.479,0,0,0-.233-.407,6.511,6.511,0,1,0-3.327,12.107,6.582,6.582,0,0,0,6.148-4.374,5.228,5.228,0,0,0,.333-1.542A.461.461,0,0,0,23.182,6.923Z"></path><path d="M9.73,10.418,7.376,12.883c-.01.01-.021.016-.03.025L1.158,19.1a2.682,2.682,0,1,0,3.793,3.793l4.583-4.582,0,0,4.1-4.005-.037-.037A9.094,9.094,0,0,1,9.73,10.418ZM3.053,21.888A.894.894,0,1,1,3.946,21,.893.893,0,0,1,3.053,21.888Z"></path></g></g></svg><div class="tooltiptext topmenutooltip">BetterSEQTA Settings</div></button>'
+          '<button class="addedButton tooltip" id="AddedSettings""><svg width="24" height="24" viewBox="0 0 24 24"><g><g><path d="M23.182,6.923c-.29,0-3.662,2.122-4.142,2.4l-2.8-1.555V4.511l4.257-2.456a.518.518,0,0,0,.233-.408.479.479,0,0,0-.233-.407,6.511,6.511,0,1,0-3.327,12.107,6.582,6.582,0,0,0,6.148-4.374,5.228,5.228,0,0,0,.333-1.542A.461.461,0,0,0,23.182,6.923Z"></path><path d="M9.73,10.418,7.376,12.883c-.01.01-.021.016-.03.025L1.158,19.1a2.682,2.682,0,1,0,3.793,3.793l4.583-4.582,0,0,4.1-4.005-.037-.037A9.094,9.094,0,0,1,9.73,10.418ZM3.053,21.888A.894.894,0,1,1,3.946,21,.893.893,0,0,1,3.053,21.888Z"></path></g></g></svg><div class="tooltiptext topmenutooltip">HyperSEQTA Settings</div></button>'
         )
         const ContentDiv = document.getElementById('content')
         ContentDiv.append(SettingsButton.firstChild)
@@ -1919,7 +1922,7 @@ function callHomeTimetable (date, change) {
           const dummyDay = document.createElement('div')
           dummyDay.classList.add('day-empty')
           const img = document.createElement('img')
-          img.src = browser.runtime.getURL('icons/betterseqta-light-icon.png')
+          img.src = browser.runtime.getURL('icons/hyperseqta-light-icon.png')
           const text = document.createElement('p')
           text.innerText = 'No lessons available.'
           dummyDay.append(img)
@@ -2402,7 +2405,7 @@ function AddCustomShortcutsToPage () {
 function SendHomePage () {
   setTimeout(function () {
     // Sends the html data for the home page
-    console.log('[BetterSEQTA] Started Loading Home Page')
+    console.log('[HyperSEQTA] Started Loading Home Page')
     document.title = 'Home ― SEQTA Learn'
     const element = document.querySelector('[data-key=home]')
 
@@ -2744,7 +2747,7 @@ function SendHomePage () {
               'notifications__bubble___1EkSQ'
             )[0]
             if (typeof alertdiv === 'undefined') {
-              console.log('[BetterSEQTA] No notifications currently')
+              console.log('[HyperSEQTA] No notifications currently')
             } else {
               alertdiv.textContent = Notifications.payload.notifications.length
             }
@@ -2802,7 +2805,7 @@ function SendHomePage () {
 function SendNewsPage () {
   setTimeout(function () {
     // Sends the html data for the home page
-    console.log('[BetterSEQTA] Started Loading News Page')
+    console.log('[HyperSEQTA] Started Loading News Page')
     document.title = 'News ― SEQTA Learn'
     const element = document.querySelector('[data-key=news]')
 
@@ -2841,7 +2844,7 @@ function SendNewsPage () {
         articleimage.classList.add('articleimage')
 
         if (newsarticles[i].urlToImage === 'null') {
-          articleimage.style.backgroundImage = `url(${browser.runtime.getURL('icons/betterseqta-light-outline.png')})`
+          articleimage.style.backgroundImage = `url(${browser.runtime.getURL('icons/hyperseqta-light-icon.png')})`
           articleimage.style.width = '20%'
           articleimage.style.margin = '0 7.5%'
         } else {
@@ -2923,7 +2926,7 @@ function documentTextColor () {
 browser.storage.onChanged.addListener(documentTextColor)
 
 function LoadInit () {
-  console.log('[BetterSEQTA] Started Init')
+  console.log('[HyperSEQTA] Started Init')
   const result = browser.storage.local.get()
   function homePage (result) {
     if (result.onoff) {

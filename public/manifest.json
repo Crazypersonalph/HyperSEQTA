@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "BetterSEQTA",
+    "name": "HyperSEQTA",
     "version": "2.0.9",
     "description": "A dark-themed Firefox/Chrome Extension that adds additional features and gives an overall better experience for SEQTA Learn.",
     "icons": {

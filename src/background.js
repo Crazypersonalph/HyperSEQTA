@@ -14,7 +14,7 @@ browser.runtime.onMessage.addListener(function (request, sender) {
   if (request.type === 'reloadTabs') {
     ReloadSEQTAPages()
   } else if (request.type === 'githubTab') {
-    browser.tabs.create({ url: 'https://github.com/crazypersonalph/betterseqta' })
+    browser.tabs.create({ url: 'https://github.com/crazypersonalph/hyperseqta' })
   } else if (request.type === 'setDefaultStorage') {
     console.log('setting default values')
     SetStorageValue(DefaultValues)
