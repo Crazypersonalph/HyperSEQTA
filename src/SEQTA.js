@@ -530,6 +530,7 @@ function tryLoad () {
     function () {
       CheckiFrameItems()
       addIFrameCSSToNotices()
+      removeThemeTagsFromNotices()
       documentTextColor()
     },
     true
@@ -2614,7 +2615,7 @@ function SendHomePage () {
                   )
                   NewNotice.append(staff.firstChild)
                   // Converts the string into HTML
-                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w][:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
                   for (let i = 0; i < content.childNodes.length; i++) {
                     NewNotice.append(content.childNodes[i])
                   }
@@ -2693,7 +2694,7 @@ function SendHomePage () {
                   )
                   NewNotice.append(staff.firstChild)
                   // Converts the string into HTML
-                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w][:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
                   for (let i = 0; i < content.childNodes.length; i++) {
                     NewNotice.append(content.childNodes[i])
                   }
@@ -2886,6 +2887,21 @@ function addIFrameCSSToNotices () {
     const head = item.contentWindow.document.querySelectorAll('head')[0]
     // Checks if the CSS has already been applied. If it has, then it does nothing. If not, it appends the CSS file
     if (head.innerHTML.includes('noticeiframe.css') === false) { head.append(fileref) }
+  }
+}
+
+function removeThemeTagsFromNotices () {
+  // Grabs an array of the notice iFrames
+  const userHTMLArray = document.getElementsByClassName('userHTML')
+  // Iterates through the array, applying the iFrame css
+  for (const item of userHTMLArray) {
+    // Grabs the HTML of the body tag
+    const body = item.contentWindow.document.querySelectorAll('body')[0]
+    if (body) {
+    // Replaces the theme tag with nothing
+      const bodyText = body.innerHTML
+      body.innerhtml = bodyText.replace(/\[\[[\w][:][\w]+[\]\]]+/g, '').replace(/ +/, ' ')
+    }
   }
 }
 
