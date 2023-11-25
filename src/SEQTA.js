@@ -530,10 +530,14 @@ function tryLoad () {
     function () {
       CheckiFrameItems()
       addIFrameCSSToNotices()
+      removeThemeTagsFromNotices()
       documentTextColor()
     },
     true
   )
+
+  const observer = new MutationObserver(list => { documentTextColor() })
+  observer.observe(document.getElementById('toolbar'), { attributes: true, childList: true, subtree: true })
 }
 
 function ChangeMenuItemPositions (storage) {
@@ -1478,8 +1482,6 @@ function AddhyperseqtaElements (toggle) {
             const ogTiming = style.getPropertyValue('animation-duration')
             const sliced = ogTiming.slice(0, -1)
             bgSingular.style.animationDuration = `${(Number(sliced) / (item.bksliderinput / 100)).toString()}s`
-            const thing = window.getComputedStyle(bgSingular)
-            console.log(thing.getPropertyValue('animation-duration'))
           }
         }
         result.then(animbkEnable, onError)
@@ -2589,7 +2591,7 @@ function SendHomePage () {
             const result = browser.storage.local.get(['DarkMode'])
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
-                const labelArray = response.payload[0].value.split(' ')
+                const labelArray = response.payload[1].value.split(' ')
                 if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
                   const NewNotice = document.createElement('div')
@@ -2611,7 +2613,7 @@ function SendHomePage () {
                   )
                   NewNotice.append(staff.firstChild)
                   // Converts the string into HTML
-                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w]+[:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
                   for (let i = 0; i < content.childNodes.length; i++) {
                     NewNotice.append(content.childNodes[i])
                   }
@@ -2667,7 +2669,7 @@ function SendHomePage () {
             const result = browser.storage.local.get(['DarkMode'])
             function noticeInfoDiv (result) {
               for (let i = 0; i < NoticesPayload.payload.length; i++) {
-                const labelArray = response.payload[0].value.split(' ')
+                const labelArray = response.payload[1].value.split(' ')
 
                 if (labelArray.includes(JSON.stringify(NoticesPayload.payload[i].label))) {
                 // Create a div, and place information from json response
@@ -2690,7 +2692,7 @@ function SendHomePage () {
                   )
                   NewNotice.append(staff.firstChild)
                   // Converts the string into HTML
-                  const content = stringToHTML(NoticesPayload.payload[i].contents, true)
+                  const content = stringToHTML(NoticesPayload.payload[i].contents.replace(/\[\[[\w]+[:][\w]+[\]\]]+/g, '').replace(/ +/, ' '), true)
                   for (let i = 0; i < content.childNodes.length; i++) {
                     NewNotice.append(content.childNodes[i])
                   }
@@ -2883,6 +2885,21 @@ function addIFrameCSSToNotices () {
     const head = item.contentWindow.document.querySelectorAll('head')[0]
     // Checks if the CSS has already been applied. If it has, then it does nothing. If not, it appends the CSS file
     if (head.innerHTML.includes('noticeiframe.css') === false) { head.append(fileref) }
+  }
+}
+
+function removeThemeTagsFromNotices () {
+  // Grabs an array of the notice iFrames
+  const userHTMLArray = document.getElementsByClassName('userHTML')
+  // Iterates through the array, applying the iFrame css
+  for (const item of userHTMLArray) {
+    // Grabs the HTML of the body tag
+    const body = item.contentWindow.document.querySelectorAll('body')[0]
+    if (body) {
+    // Replaces the theme tag with nothing
+      const bodyText = body.innerHTML
+      body.innerhtml = bodyText.replace(/\[\[[\w]+[:][\w]+[\]\]]+/g, '').replace(/ +/, ' ')
+    }
   }
 }
 
