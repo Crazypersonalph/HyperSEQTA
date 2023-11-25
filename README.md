@@ -1,10 +1,11 @@
 <h1 align="center">
   <br>
-  <a href="https://betterseqta.crazypersonalph.com"><img src="https://user-images.githubusercontent.com/95666457/149907844-f4466dfc-f40d-409a-a888-a094c57040f0.png" alt="BetterSEQTA" width="600"></a>
+  <a href="https://betterseqta.crazypersonalph.com"><img src="https://github.com/Crazypersonalph/HyperSEQTA/assets/93847055/1d998d43-7be1-4ac3-a434-162dddbecf25" alt="HyperSEQTA" width="600"></a>
+
 </h1>
 
 <p align="center">
-The continuation of the BetterSEQTA project.
+HyperSEQTA: The continuation of the BetterSeqta project
 </p>
 
 <p align="center">
