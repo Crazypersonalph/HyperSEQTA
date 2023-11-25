@@ -534,6 +534,9 @@ function tryLoad () {
     },
     true
   )
+
+  const observer = new MutationObserver(list => { documentTextColor() })
+  observer.observe(document.getElementById('toolbar'), { attributes: true, childList: true, subtree: true })
 }
 
 function ChangeMenuItemPositions (storage) {
