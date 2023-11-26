@@ -716,7 +716,7 @@ function RunFunctionOnTrue (storedSetting) {
       document.documentElement.style.setProperty('--text-primary', 'black')
     }
 
-    document.querySelector('link[rel*="icon"]').href = browser.runtime.getURL('icons/icon-48.png')
+    document.querySelector('link[rel*="icon"]').href = browser.runtime.getURL('icons/hyperseqta-dark-icon.png')
 
     const rbg = GetThresholdofHex(storedSetting.selectedColor)
     if (rbg > 210) {
@@ -2417,7 +2417,7 @@ function SendHomePage () {
 
     const titlediv = document.getElementById('title').firstChild
     titlediv.innerText = 'Home'
-    document.querySelector('link[rel*="icon"]').href = browser.runtime.getURL('icons/icon-48.png')
+    document.querySelector('link[rel*="icon"]').href = browser.runtime.getURL('icons/hyperseqta-dark-icon.png')
 
     currentSelectedDate = new Date()
 
