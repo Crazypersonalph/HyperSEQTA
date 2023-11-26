@@ -1,7 +1,9 @@
+import Dexie from './dexie.mjs'
 const onoffselection = document.querySelector('#onoff')
 const notificationcollector = document.querySelector('#notification')
 const lessonalert = document.querySelector('#lessonalert')
 const aboutsection = document.querySelector('#aboutsection')
+const themesection = document.querySelector('#themesection')
 const shortcutsection = document.querySelector('#shortcutsection')
 const miscsection = document.querySelector('#miscsection')
 const colorpicker = document.querySelector('#colorpicker')
@@ -23,6 +25,8 @@ const menupages = document.getElementsByClassName('menu-page')
 const allinputs = document.getElementsByTagName('input')
 
 const menupage = document.querySelector('#menupage')
+
+const themepage = document.querySelector('#themepage')
 
 const shortcutpage = document.querySelector('#shortcutpage')
 
@@ -88,6 +92,30 @@ function StoreAllSettings () {
 
   FindSEQTATab()
 }
+
+async function saveCSSFiles () {
+  if (document.getElementById('documentload').value !== '' && document.getElementById('iframe').value !== '' && document.getElementById('injected').value !== '' && document.getElementById('noticeiframe').value !== '') {
+    const db = new Dexie('CSS')
+    db.version(1).stores({
+      files: `
+    ++id,
+    documentload,
+    iframe,
+    injected,
+    noticeiframe`
+    })
+
+    db.files.bulkPut([
+      {
+        documentload: await document.getElementById('documentload').files[0].text(),
+        iframe: await document.getElementById('iframe').files[0].text(),
+        injected: await document.getElementById('injected').files[0].text(),
+        noticeiframe: await document.getElementById('noticeiframe').files[0].text()
+      }
+    ])
+  }
+}
+
 /*
 Update the options UI with the settings values retrieved from storage,
 or the default settings if the stored settings are empty.
@@ -220,6 +248,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   aboutsection.addEventListener('click', () => { resetActive(); aboutsection.classList.add('activenav'); menupage.classList.remove('hiddenmenu') })
 
+  themesection.addEventListener('click', () => { resetActive(); themesection.classList.add('activenav'); themepage.classList.remove('hiddenmenu') })
+
   shortcutsection.addEventListener('click', () => { resetActive(); shortcutsection.classList.add('activenav'); shortcutpage.classList.remove('hiddenmenu') })
 
   miscsection.addEventListener('click', () => { resetActive(); miscsection.classList.add('activenav'); miscpage.classList.remove('hiddenmenu') })
@@ -286,7 +316,7 @@ for (let i = 0; i < allinputs.length; i++) {
   }
 }
 
-applybutton.addEventListener('click', () => { StoreAllSettings(); applybutton.style.left = '-150px' })
+applybutton.addEventListener('click', () => { saveCSSFiles(); StoreAllSettings(); applybutton.style.left = '-150px' })
 
 colorpicker.addEventListener('input', function () {
   const colorPreview = document.querySelector('#clr-color-preview')

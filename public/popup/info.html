@@ -4,6 +4,7 @@
 <head>
   <link rel="stylesheet" href="coloris.css" />
   <script src="coloris.js"></script>
+  <script type="module" src="dexie.mjs"></script>
   <meta charset="utf-8">
   <link rel="stylesheet" href="info.css" />
 </head>
@@ -21,11 +22,26 @@
   <div class="main-page" id="mainpage">
     <div class="topmenu">
       <div class="navitem activenav" id="miscsection">Settings</div>
+      <div class="navitem" id="themesection">Themes & CSS</div>
       <div class="navitem" id="shortcutsection">Shortcuts</div>
       <div class="navitem" id="aboutsection">About</div>
     </div>
   </div>
 
+  <div class="menu-page hiddenmenu" id="themepage">
+    <div class="selector-container" style="margin-bottom: 0;">
+      <div class="menu-item-selection">
+        <label for="documentload">documentload:</label>
+        <input type="file" id="documentload" name="documentload" accept="text/css"/>
+        <label for="iframe">iframe:</label>
+        <input type="file" id="iframe" name="iframe" accept="text/css"/>
+        <label for="injected">injected:</label>
+        <input type="file" id="injected" name="injected" accept="text/css"/>
+        <label for="noticeiframe">noticeiframe:</label>
+        <input type="file" id="noticeiframe" name="noticeiframe" accept="text/css"/>
+      </div>
+    </div>
+  </div>
 
   <div class="menu-page hiddenmenu" id="menupage">
     <div class="selector-container" style="margin-bottom: 0;">
