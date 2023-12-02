@@ -1,3 +1,5 @@
+<h1 align="center">⚠️ NOTE: THIS PROJECT IS NO LONGER ACTIVELY MAINTAINED
+  https://github.com/SethBurkart123/EvenBetterSEQTA</h1>
 <h1 align="center">
   <br>
   <a href="https://betterseqta.crazypersonalph.com"><img src="https://github.com/Crazypersonalph/HyperSEQTA/assets/93847055/1d998d43-7be1-4ac3-a434-162dddbecf25" alt="HyperSEQTA" width="600"></a>
